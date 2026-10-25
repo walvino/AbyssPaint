@@ -1,0 +1,82 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build:
+    name: Build AbyssPaint for macOS
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app
+          xcodebuild -version
+
+      - name: Resolve Swift Package Dependencies (if any)
+        run: |
+          cd AbyssPaint
+          xcodebuild -resolvePackageDependencies -project AbyssPaint.xcodeproj -scheme AbyssPaint || true
+
+      - name: Build Release
+        run: |
+          cd AbyssPaint
+          xcodebuild build \
+            -project AbyssPaint.xcodeproj \
+            -scheme AbyssPaint \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || cat
+
+      - name: Locate .app
+        id: locate
+        run: |
+          APP_PATH=$(find build -name "AbyssPaint.app" -type d | head -1)
+          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
+          ls -la "$APP_PATH"
+
+      - name: Verify app structure
+        run: |
+          APP_PATH="${{ steps.locate.outputs.app_path }}"
+          echo "=== App bundle ==="
+          ls -la "$APP_PATH"
+          echo "=== Info.plist ==="
+          plutil -p "$APP_PATH/Contents/Info.plist"
+          echo "=== Executable ==="
+          file "$APP_PATH/Contents/MacOS/AbyssPaint"
+
+      - name: Create zip artifact
+        run: |
+          APP_PATH="${{ steps.locate.outputs.app_path }}"
+          ditto -c -k --keepParent "$APP_PATH" AbyssPaint-macOS.zip
+          echo "Created AbyssPaint-macOS.zip ($(du -h AbyssPaint-macOS.zip | cut -f1))"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbyssPaint-macOS
+          path: AbyssPaint-macOS.zip
+          retention-days: 7
+
+      - name: Summary
+        run: |
+          echo "## Build Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** \`AbyssPaint-macOS.zip\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**To install:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download artifact from Actions page" >> $GITHUB_STEP_SUMMARY
+          echo "2. Unzip" >> $GITHUB_STEP_SUMMARY
+          echo "3. Right-click \`AbyssPaint.app\` → **Open**" >> $GITHUB_STEP_SUMMARY
+          echo "4. Click **Open** in Gatekeeper dialog" >> $GITHUB_STEP_SUMMARY
