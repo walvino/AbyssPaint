@@ -37,35 +37,35 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A1000002 /* AbyssPaint.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AbyssPaint/AbyssPaint.entitlements; sourceTree = "<group>"; };
-		A1000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = AbyssPaint/Resources/Assets.xcassets; sourceTree = "<group>"; };
-		A1000006 /* AbyssPaint.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AbyssPaint/AbyssPaint.xcdatamodeld; sourceTree = "<group>"; };
-		A1000008 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/main.swift; sourceTree = "<group>"; };
-		A100000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/AppDelegate.swift; sourceTree = "<group>"; };
-		A100000C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/CanvasView.swift; sourceTree = "<group>"; };
-		A100000E /* CanvasEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/CanvasEngine.swift; sourceTree = "<group>"; };
-		A1000010 /* BrushEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/BrushEngine.swift; sourceTree = "<group>"; };
-		A1000012 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/RenderEngine.swift; sourceTree = "<group>"; };
-		A1000014 /* TabletInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/TabletInput.swift; sourceTree = "<group>"; };
-		A1000016 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/FileIO.swift; sourceTree = "<group>"; };
-		A1000018 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/Preferences.swift; sourceTree = "<group>"; };
-		A100001A /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = AbyssPaint/Resources/Shaders.metal; sourceTree = "<group>"; };
-		A100001C /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/PersistenceController.swift; sourceTree = "<group>"; };
-		A100001E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/Models.swift; sourceTree = "<group>"; };
-		A1000020 /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/Stroke.swift; sourceTree = "<group>"; };
-		A1000022 /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/Brush.swift; sourceTree = "<group>"; };
-		A1000024 /* AnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/AnimationEngine.swift; sourceTree = "<group>"; };
-		A1000026 /* AnimationTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/AnimationTimeline.swift; sourceTree = "<group>"; };
-		A1000028 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/SettingsView.swift; sourceTree = "<group>"; };
-		A100002A /* AdjustmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/AdjustmentEngine.swift; sourceTree = "<group>"; };
-		A100002C /* LayerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/LayerPanel.swift; sourceTree = "<group>"; };
-		A100002E /* BrushLibraryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/BrushLibraryPanel.swift; sourceTree = "<group>"; };
-		A1000030 /* ColorPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/ColorPickerPanel.swift; sourceTree = "<group>"; };
-		A1000032 /* ReferenceWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/ReferenceWindow.swift; sourceTree = "<group>"; };
-		A1000034 /* NewCanvasSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/NewCanvasSheet.swift; sourceTree = "<group>"; };
-		A1000036 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbyssPaint/ContentView.swift; sourceTree = "<group>"; };
+		A1000002 /* AbyssPaint.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path =AbyssPaint.entitlements; sourceTree = "<group>"; };
+		A1000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path =Resources/Assets.xcassets; sourceTree = "<group>"; };
+		A1000006 /* AbyssPaint.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path =AbyssPaint.xcdatamodeld; sourceTree = "<group>"; };
+		A1000008 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =main.swift; sourceTree = "<group>"; };
+		A100000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AppDelegate.swift; sourceTree = "<group>"; };
+		A100000C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =CanvasView.swift; sourceTree = "<group>"; };
+		A100000E /* CanvasEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =CanvasEngine.swift; sourceTree = "<group>"; };
+		A1000010 /* BrushEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =BrushEngine.swift; sourceTree = "<group>"; };
+		A1000012 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =RenderEngine.swift; sourceTree = "<group>"; };
+		A1000014 /* TabletInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =TabletInput.swift; sourceTree = "<group>"; };
+		A1000016 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =FileIO.swift; sourceTree = "<group>"; };
+		A1000018 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Preferences.swift; sourceTree = "<group>"; };
+		A100001A /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path =Resources/Shaders.metal; sourceTree = "<group>"; };
+		A100001C /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =PersistenceController.swift; sourceTree = "<group>"; };
+		A100001E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Models.swift; sourceTree = "<group>"; };
+		A1000020 /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Stroke.swift; sourceTree = "<group>"; };
+		A1000022 /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Brush.swift; sourceTree = "<group>"; };
+		A1000024 /* AnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AnimationEngine.swift; sourceTree = "<group>"; };
+		A1000026 /* AnimationTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AnimationTimeline.swift; sourceTree = "<group>"; };
+		A1000028 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =SettingsView.swift; sourceTree = "<group>"; };
+		A100002A /* AdjustmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AdjustmentEngine.swift; sourceTree = "<group>"; };
+		A100002C /* LayerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =LayerPanel.swift; sourceTree = "<group>"; };
+		A100002E /* BrushLibraryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =BrushLibraryPanel.swift; sourceTree = "<group>"; };
+		A1000030 /* ColorPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ColorPickerPanel.swift; sourceTree = "<group>"; };
+		A1000032 /* ReferenceWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ReferenceWindow.swift; sourceTree = "<group>"; };
+		A1000034 /* NewCanvasSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =NewCanvasSheet.swift; sourceTree = "<group>"; };
+		A1000036 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ContentView.swift; sourceTree = "<group>"; };
 		A1000037 /* AbyssPaint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbyssPaint.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1000038 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = AbyssPaint/Info.plist; sourceTree = "<group>"; };
+		A1000038 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path =Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -237,7 +237,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbyssPaint/AbyssPaint.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -253,7 +253,7 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -281,7 +281,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AbyssPaint/AbyssPaint.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -295,7 +295,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
