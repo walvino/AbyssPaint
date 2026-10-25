@@ -1,4 +1,4 @@
-name: Build macOS App
+name: Build macOS App (Debug)
 
 on:
   push:
@@ -21,48 +21,48 @@ jobs:
           uname -a
           sw_vers
           echo "=== Xcode versions ==="
-          ls -la /Applications/ | grep -i xcode
+          ls -la /Applications/ | grep -i xcode || echo "No Xcode found"
           echo "=== Default xcodebuild ==="
-          xcodebuild -version
+          xcodebuild -version || echo "xcodebuild failed"
+        continue-on-error: true
 
-      - name: Select Xcode 15.4 (if available) or latest
+      - name: Select Xcode
         run: |
-          if [ -d "/Applications/Xcode_15.4.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.4.app
-          elif [ -d "/Applications/Xcode_15.3.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.3.app
-          elif [ -d "/Applications/Xcode_15.2.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.2.app
-          else
-            XCODE_LATEST=$(ls -d /Applications/Xcode*.app | tail -1)
-            sudo xcode-select -s "$XCODE_LATEST"
+          echo "=== Trying to find Xcode ==="
+          for v in 15.4 15.3 15.2 15.1 15.0; do
+            if [ -d "/Applications/Xcode_${v}.app" ]; then
+              echo "Found Xcode_${v}.app"
+              sudo xcode-select -s "/Applications/Xcode_${v}.app"
+              break
+            fi
+          done
+          if ! xcodebuild -version 2>/dev/null; then
+            XCODE_LATEST=$(ls -d /Applications/Xcode*.app 2>/dev/null | tail -1)
+            if [ -n "$XCODE_LATEST" ]; then
+              echo "Using latest: $XCODE_LATEST"
+              sudo xcode-select -s "$XCODE_LATEST"
+            else
+              echo "ERROR: No Xcode found"
+              exit 1
+            fi
           fi
           echo "Selected: $(xcodebuild -version)"
+        continue-on-error: true
 
       - name: Show project structure
         run: |
           cd AbyssPaint
-          xcodebuild -list -project AbyssPaint.xcodeproj
+          echo "=== Project contents ==="
+          ls -la
+          echo "=== xcodebuild -list ==="
+          xcodebuild -list -project AbyssPaint.xcodeproj 2>&1 || echo "xcodebuild -list failed"
+        continue-on-error: true
 
-      - name: Create shared scheme
-        run: |
-          cd AbyssPaint
-          # Create a shared scheme for the target
-          xcodebuild -project AbyssPaint.xcodeproj \
-            -target AbyssPaint \
-            -scheme AbyssPaint \
-            -destination 'platform=macOS' \
-            -showBuildSettings 2>&1 | head -30 || true
-          
-          # Try to create scheme via xcodebuild (modern approach)
-          xcodebuild -project AbyssPaint.xcodeproj \
-            -createScheme 2>&1 || true
-
-      - name: Build with target (full log on failure)
+      - name: Try build with target (capture full output)
         id: build_target
         run: |
           cd AbyssPaint
-          set +e
+          echo "=== Starting build with target ==="
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -target AbyssPaint \
@@ -76,18 +76,21 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET=14.0 \
             2>&1 | tee build_target.log
           BUILD_EXIT=${PIPESTATUS[0]}
-          echo "Exit code: $BUILD_EXIT"
+          echo "BUILD_EXIT=$BUILD_EXIT" >> $GITHUB_OUTPUT
           if [ $BUILD_EXIT -ne 0 ]; then
-            echo "=== BUILD FAILED - Full log ==="
-            cat build_target.log
+            echo "=== BUILD FAILED - showing last 200 lines ==="
+            tail -200 build_target.log
+          else
+            echo "=== BUILD SUCCEEDED ==="
           fi
-          exit $BUILD_EXIT
+        continue-on-error: true
 
-      - name: If target failed, try with scheme
-        if: failure() && steps.build_target.outcome == 'failure'
+      - name: Try build with scheme (fallback)
+        if: steps.build_target.outputs.BUILD_EXIT != '0'
+        id: build_scheme
         run: |
           cd AbyssPaint
-          # Try to build with scheme (may need to be created)
+          echo "=== Trying with scheme ==="
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -scheme AbyssPaint \
@@ -101,15 +104,59 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET=14.0 \
             2>&1 | tee build_scheme.log
           BUILD_EXIT=${PIPESTATUS[0]}
-          echo "Exit code: $BUILD_EXIT"
+          echo "BUILD_EXIT=$BUILD_EXIT" >> $GITHUB_OUTPUT
           if [ $BUILD_EXIT -ne 0 ]; then
-            echo "=== SCHEME BUILD FAILED - Full log ==="
-            cat build_scheme.log
+            echo "=== SCHEME BUILD FAILED - showing last 200 lines ==="
+            tail -200 build_scheme.log
+          else
+            echo "=== SCHEME BUILD SUCCEEDED ==="
           fi
-          exit $BUILD_EXIT
+        continue-on-error: true
+
+      - name: Try xcodebuild without explicit destination (fallback 2)
+        if: steps.build_target.outputs.BUILD_EXIT != '0' && steps.build_scheme.outputs.BUILD_EXIT != '0'
+        id: build_fallback
+        run: |
+          cd AbyssPaint
+          echo "=== Trying minimal build ==="
+          xcodebuild build \
+            -project AbyssPaint.xcodeproj \
+            -target AbyssPaint \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build_fallback.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          echo "BUILD_EXIT=$BUILD_EXIT" >> $GITHUB_OUTPUT
+          if [ $BUILD_EXIT -ne 0 ]; then
+            echo "=== FALLBACK BUILD FAILED - showing last 200 lines ==="
+            tail -200 build_fallback.log
+          else
+            echo "=== FALLBACK BUILD SUCCEEDED ==="
+          fi
+        continue-on-error: true
+
+      - name: Check if any build succeeded
+        id: check_success
+        run: |
+          SUCCESS=false
+          if [ "${{ steps.build_target.outputs.BUILD_EXIT }}" = "0" ]; then
+            SUCCESS=true
+          elif [ "${{ steps.build_scheme.outputs.BUILD_EXIT }}" = "0" ]; then
+            SUCCESS=true
+          elif [ "${{ steps.build_fallback.outputs.BUILD_EXIT }}" = "0" ]; then
+            SUCCESS=true
+          fi
+          echo "SUCCESS=$SUCCESS" >> $GITHUB_OUTPUT
+          if [ "$SUCCESS" = "false" ]; then
+            echo "=== ALL BUILD ATTEMPTS FAILED ==="
+            exit 1
+          fi
 
       - name: Locate .app
-        if: success()
+        if: steps.check_success.outputs.SUCCESS == 'true'
         id: locate
         run: |
           APP_PATH=$(find AbyssPaint/build -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
@@ -122,7 +169,7 @@ jobs:
           ls -la "$APP_PATH"
 
       - name: Verify app structure
-        if: success()
+        if: steps.check_success.outputs.SUCCESS == 'true'
         run: |
           APP_PATH="${{ steps.locate.outputs.app_path }}"
           echo "=== App bundle ==="
@@ -133,22 +180,32 @@ jobs:
           file "$APP_PATH/Contents/MacOS/AbyssPaint"
 
       - name: Create zip artifact
-        if: success()
+        if: steps.check_success.outputs.SUCCESS == 'true'
         run: |
           APP_PATH="${{ steps.locate.outputs.app_path }}"
           ditto -c -k --keepParent "$APP_PATH" AbyssPaint-macOS.zip
           echo "Created AbyssPaint-macOS.zip ($(du -h AbyssPaint-macOS.zip | cut -f1))"
 
       - name: Upload artifact
-        if: success()
+        if: steps.check_success.outputs.SUCCESS == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: AbyssPaint-macOS
           path: AbyssPaint-macOS.zip
           retention-days: 7
 
+      - name: Upload ALL build logs (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            AbyssPaint/build_target.log
+            AbyssPaint/build_scheme.log
+            AbyssPaint/build_fallback.log
+          retention-days: 7
+
       - name: Summary
-        if: success()
+        if: steps.check_success.outputs.SUCCESS == 'true'
         run: |
           echo "## Build Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -159,13 +216,3 @@ jobs:
           echo "2. Unzip" >> $GITHUB_STEP_SUMMARY
           echo "3. Right-click \`AbyssPaint.app\` → **Open**" >> $GITHUB_STEP_SUMMARY
           echo "4. Click **Open** in Gatekeeper dialog" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload build logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            AbyssPaint/build_target.log
-            AbyssPaint/build_scheme.log
-          retention-days: 7
