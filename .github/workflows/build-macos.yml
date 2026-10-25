@@ -22,31 +22,38 @@ jobs:
 
       - name: Select Xcode (latest available)
         run: |
-          # Find latest Xcode
           XCODE_PATH=$(ls -d /Applications/Xcode*.app | tail -1)
           echo "Using: $XCODE_PATH"
           sudo xcode-select -s "$XCODE_PATH"
           xcodebuild -version
 
-      - name: Show project schemes
+      - name: Show project structure
         run: |
           cd AbyssPaint
           xcodebuild -list -project AbyssPaint.xcodeproj
 
-      - name: Build Release (no code signing)
+      - name: Create shared scheme (if needed)
         run: |
           cd AbyssPaint
-          # Try building with target instead of scheme (more reliable)
+          # Create a scheme for the target
+          xcodebuild -project AbyssPaint.xcodeproj -target AbyssPaint -scheme AbyssPaint -destination 'platform=macOS' -showBuildSettings 2>&1 | head -20 || true
+
+      - name: Build Release
+        run: |
+          cd AbyssPaint
+          # Build with explicit settings
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -target AbyssPaint \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tail -50
+            SWIFT_VERSION=6.0 \
+            MACOSX_DEPLOYMENT_TARGET=14.0 \
+            2>&1 | tail -100
 
       - name: Locate .app
         id: locate
@@ -54,7 +61,10 @@ jobs:
           APP_PATH=$(find AbyssPaint/build -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: .app not found"
-            find AbyssPaint/build -type f -name "*.app" 2>/dev/null | head -5
+            echo "Searching build directory:"
+            find AbyssPaint/build -type d -name "*.app" 2>/dev/null | head -10
+            echo "---"
+            ls -la AbyssPaint/build/
             exit 1
           fi
           echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
