@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build AbyssPaint for macOS
-    runs-on: macos-14  # Use specific macOS 14 runner (more stable)
+    runs-on: macos-14
     timeout-minutes: 30
 
     steps:
@@ -21,14 +21,11 @@ jobs:
           ls -la
           echo "=== AbyssPaint dir ==="
           ls -la AbyssPaint/
-          echo "=== .xcodeproj ==="
-          ls -la AbyssPaint/AbyssPaint.xcodeproj/
 
       - name: Show project structure
         run: |
-          cd AbyssPaint
           echo "=== Swift files ==="
-          find . -name "*.swift" -o -name "*.metal" | head -30
+          find AbyssPaint -name "*.swift" -o -name "*.metal" | head -30
           echo "=== xcodebuild -list ==="
           xcodebuild -list -project AbyssPaint.xcodeproj 2>&1
 
@@ -41,11 +38,10 @@ jobs:
           fi
           xcodebuild -version
 
-      - name: Build (simplest possible)
+      - name: Build (from root, project is in root)
         id: build
         run: |
-          cd AbyssPaint
-          # Try to build without any explicit destination - let xcodebuild decide
+          # Build from root directory where .xcodeproj lives
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -target AbyssPaint \
@@ -95,5 +91,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: AbyssPaint/build.log
+          path: build.log
           retention-days: 7
