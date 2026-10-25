@@ -3,46 +3,60 @@ name: Build macOS App
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build AbyssPaint for macOS
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: List available Xcode versions
         run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app
+          ls -la /Applications/ | grep Xcode
           xcodebuild -version
 
-      - name: Resolve Swift Package Dependencies (if any)
+      - name: Select Xcode (latest available)
         run: |
-          cd AbyssPaint
-          xcodebuild -resolvePackageDependencies -project AbyssPaint.xcodeproj -scheme AbyssPaint || true
+          # Find latest Xcode
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app | tail -1)
+          echo "Using: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH"
+          xcodebuild -version
 
-      - name: Build Release
+      - name: Show project schemes
         run: |
           cd AbyssPaint
+          xcodebuild -list -project AbyssPaint.xcodeproj
+
+      - name: Build Release (no code signing)
+        run: |
+          cd AbyssPaint
+          # Try building with target instead of scheme (more reliable)
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
-            -scheme AbyssPaint \
+            -target AbyssPaint \
             -configuration Release \
             -destination 'platform=macOS' \
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty || cat
+            2>&1 | tail -50
 
       - name: Locate .app
         id: locate
         run: |
-          APP_PATH=$(find build -name "AbyssPaint.app" -type d | head -1)
+          APP_PATH=$(find AbyssPaint/build -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: .app not found"
+            find AbyssPaint/build -type f -name "*.app" 2>/dev/null | head -5
+            exit 1
+          fi
           echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
           ls -la "$APP_PATH"
 
@@ -70,6 +84,7 @@ jobs:
           retention-days: 7
 
       - name: Summary
+        if: success()
         run: |
           echo "## Build Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
