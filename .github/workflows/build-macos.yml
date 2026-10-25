@@ -22,13 +22,6 @@ jobs:
           echo "=== AbyssPaint dir ==="
           ls -la AbyssPaint/
 
-      - name: Show project structure
-        run: |
-          echo "=== Swift files ==="
-          find AbyssPaint -name "*.swift" -o -name "*.metal" | head -30
-          echo "=== xcodebuild -list ==="
-          xcodebuild -list -project AbyssPaint.xcodeproj 2>&1
-
       - name: Select Xcode 15.4
         run: |
           if [ -d "/Applications/Xcode_15.4.app" ]; then
@@ -38,10 +31,10 @@ jobs:
           fi
           xcodebuild -version
 
-      - name: Build (from root, project is in root)
+      - name: Build (from AbyssPaint dir where .xcodeproj now lives)
         id: build
         run: |
-          # Build from root directory where .xcodeproj lives
+          cd AbyssPaint
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -target AbyssPaint \
@@ -63,6 +56,7 @@ jobs:
         if: steps.build.outputs.BUILD_EXIT == '0'
         id: locate
         run: |
+          cd AbyssPaint
           APP_PATH=$(find . -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: .app not found"
@@ -75,6 +69,7 @@ jobs:
       - name: Zip artifact
         if: steps.build.outputs.BUILD_EXIT == '0'
         run: |
+          cd AbyssPaint
           APP_PATH="${{ steps.locate.outputs.app_path }}"
           ditto -c -k --keepParent "$APP_PATH" AbyssPaint-macOS.zip
           echo "Created $(du -h AbyssPaint-macOS.zip | cut -f1)"
@@ -84,12 +79,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AbyssPaint-macOS
-          path: AbyssPaint-macOS.zip
+          path: AbyssPaint/AbyssPaint-macOS.zip
           retention-days: 7
 
       - name: Upload build log (always)
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: build.log
+          path: AbyssPaint/build.log
           retention-days: 7
