@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13B07F8E1A680F5B00A75B9A /* AbyssPaint.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 13B07F8D1A680F5B00A75B9A /* AbyssPaint.entitlements */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		13B07F901A680F5B00A75B9A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07F8F1A680F5B00A75B9A /* Assets.xcassets */; };
+		13B07F931A680F5B00A75B9A /* AbyssPaint.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = 13B07F911A680F5B00A75B9A /* AbyssPaint.xcdatamodeld */; };
+		13B07F961A680F5B00A75B9A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F941A680F5B00A75B9A /* AppDelegate.swift */; };
+		13B07F981A680F5B00A75B9A /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F971A680F5B00A75B9A /* CanvasView.swift */; };
+		13B07F9A1A680F5B00A75B9A /* CanvasEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F991A680F5B00A75B9A /* CanvasEngine.swift */; };
+		13B07F9C1A680F5B00A75B9A /* BrushEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F9B1A680F5B00A75B9A /* BrushEngine.swift */; };
+		13B07F9E1A680F5B00A75B9A /* RenderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F9D1A680F5B00A75B9A /* RenderEngine.swift */; };
+		13B07FA01A680F5B00A75B9A /* TabletInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07F9F1A680F5B00A75B9A /* TabletInput.swift */; };
+		13B07FA21A680F5B00A75B9A /* FileIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FA11A680F5B00A75B9A /* FileIO.swift */; };
+		13B07FA41A680F5B00A75B9A /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FA31A680F5B00A75B9A /* Preferences.swift */; };
+		13B07FA61A680F5B00A75B9A /* Shaders.metal in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FA51A680F5B00A75B9A /* Shaders.metal */; };
+		13B07FA81A680F5B00A75B9A /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FA71A680F5B00A75B9A /* PersistenceController.swift */; };
+		13B07FAA1A680F5B00A75B9A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FA91A680F5B00A75B9A /* Models.swift */; };
+		13B07FAC1A680F5B00A75B9A /* Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FAB1A680F5B00A75B9A /* Stroke.swift */; };
+		13B07FAE1A680F5B00A75B9A /* Brush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FAD1A680F5B00A75B9A /* Brush.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		13B07F8D1A680F5B00A75B9A /* AbyssPaint.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AbyssPaint.entitlements; sourceTree = "<group>"; };
+		13B07F8F1A680F5B00A75B9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		13B07F911A680F5B00A75B9A /* AbyssPaint.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = AbyssPaint.xcdatamodeld; sourceTree = "<group>"; };
+		13B07F941A680F5B00A75B9A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		13B07F971A680F5B00A75B9A /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
+		13B07F991A680F5B00A75B9A /* CanvasEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasEngine.swift; sourceTree = "<group>"; };
+		13B07F9B1A680F5B00A75B9A /* BrushEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrushEngine.swift; sourceTree = "<group>"; };
+		13B07F9D1A680F5B00A75B9A /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderEngine.swift; sourceTree = "<group>"; };
+		13B07F9F1A680F5B00A75B9A /* TabletInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabletInput.swift; sourceTree = "<group>"; };
+		13B07FA11A680F5B00A75B9A /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIO.swift; sourceTree = "<group>"; };
+		13B07FA31A680F5B00A75B9A /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		13B07FA51A680F5B00A75B9A /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		13B07FA71A680F5B00A75B9A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		13B07FA91A680F5B00A75B9A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		13B07FAB1A680F5B00A75B9A /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stroke.swift; sourceTree = "<group>"; };
+		13B07FAD1A680F5B00A75B9A /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brush.swift; sourceTree = "<group>"; };
+		13B07FAF1A680F5B00A75B9A /* AbyssPaint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbyssPaint.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB01A680F5B00A75B9A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		13B07FB21A680F5B00A75B9A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		13B07F8A1A680F5B00A75B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		13B07F831A680F5B00A75B9A = {
+			isa = PBXGroup;
+			children = (
+				13B07F841A680F5B00A75B9A /* AbyssPaint */,
+				13B07F8C1A680F5B00A75B9A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		13B07F841A680F5B00A75B9A /* AbyssPaint */ = {
+			isa = PBXGroup;
+			children = (
+				13B07FB01A680F5B00A75B9A /* Info.plist */,
+				13B07F8D1A680F5B00A75B9A /* AbyssPaint.entitlements */,
+				13B07F8E1A680F5B00A75B9A /* AbyssPaint.entitlements */,
+				13B07F8F1A680F5B00A75B9A /* Assets.xcassets */,
+				13B07F911A680F5B00A75B9A /* AbyssPaint.xcdatamodeld */,
+				13B07FB21A680F5B00A75B9A /* main.swift */,
+				13B07F941A680F5B00A75B9A /* AppDelegate.swift */,
+				13B07F971A680F5B00A75B9A /* CanvasView.swift */,
+				13B07F991A680F5B00A75B9A /* CanvasEngine.swift */,
+				13B07F9B1A680F5B00A75B9A /* BrushEngine.swift */,
+				13B07F9D1A680F5B00A75B9A /* RenderEngine.swift */,
+				13B07F9F1A680F5B00A75B9A /* TabletInput.swift */,
+				13B07FA11A680F5B00A75B9A /* FileIO.swift */,
+				13B07FA31A680F5B00A75B9A /* Preferences.swift */,
+				13B07FA51A680F5B00A75B9A /* Shaders.metal */,
+				13B07FA71A680F5B00A75B9A /* PersistenceController.swift */,
+				13B07FA91A680F5B00A75B9A /* Models.swift */,
+				13B07FAB1A680F5B00A75B9A /* Stroke.swift */,
+				13B07FAD1A680F5B00A75B9A /* Brush.swift */,
+			);
+			path = AbyssPaint;
+			sourceTree = "<group>";
+		};
+		13B07F8C1A680F5B00A75B9A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				13B07FAF1A680F5B00A75B9A /* AbyssPaint.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		13B07F8B1A680F5B00A75B9A /* AbyssPaint */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 13B07F8E1A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AbyssPaint" */;
+			buildPhases = (
+				13B07F881A680F5B00A75B9A /* Sources */,
+				13B07F891A680F5B00A75B9A /* Frameworks */,
+				13B07F8A1A680F5B00A75B9A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AbyssPaint;
+			productName = AbyssPaint;
+			productReference = 13B07FAF1A680F5B00A75B9A /* AbyssPaint.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		13B07F821A680F5B00A75B9A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftMigration = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					13B07F8B1A680F5B00A75B9A = {
+						CreatedOnToolsVersion = 16.0;
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 13B07F851A680F5B00A75B9A /* Build configuration list for PBXProject "AbyssPaint" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 13B07F831A680F5B00A75B9A;
+			productRefGroup = 13B07F8C1A680F5B00A75B9A;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				13B07F8B1A680F5B00A75B9A /* AbyssPaint */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13B07F8A1A680F5B00A75B9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				13B07F8E1A680F5B00A75B9A /* AbyssPaint.entitlements in Resources */,
+				13B07F901A680F5B00A75B9A /* Assets.xcassets in Resources */,
+				13B07F931A680F5B00A75B9A /* AbyssPaint.xcdatamodeld in Resources */,
+				13B07FA61A680F5B00A75B9A /* Shaders.metal in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		13B07F881A680F5B00A75B9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				13B07F961A680F5B00A75B9A /* AppDelegate.swift in Sources */,
+				13B07F981A680F5B00A75B9A /* CanvasView.swift in Sources */,
+				13B07F9A1A680F5B00A75B9A /* CanvasEngine.swift in Sources */,
+				13B07F9C1A680F5B00A75B9A /* BrushEngine.swift in Sources */,
+				13B07F9E1A680F5B00A75B9A /* RenderEngine.swift in Sources */,
+				13B07FA01A680F5B00A75B9A /* TabletInput.swift in Sources */,
+				13B07FA21A680F5B00A75B9A /* FileIO.swift in Sources */,
+				13B07FA41A680F5B00A75B9A /* Preferences.swift in Sources */,
+				13B07FA81A680F5B00A75B9A /* PersistenceController.swift in Sources */,
+				13B07FAA1A680F5B00A75B9A /* Models.swift in Sources */,
+				13B07FAC1A680F5B00A75B9A /* Stroke.swift in Sources */,
+				13B07FAE1A680F5B00A75B9A /* Brush.swift in Sources */,
+				13B07FB21A680F5B00A75B9A /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		13B07F861A680F5B00A75B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint/AbyssPaint.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				METAL_SHADER_COMPILER_OPTIONS = (
+					"-O0",
+					"-gline-tables-only",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abysspaint.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = -Onone;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		13B07F871A680F5B00A75B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint/AbyssPaint.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				METAL_SHADER_COMPILER_OPTIONS = (
+					"-O3",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abysspaint.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -O;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		13B07F891A680F5B00A75B9A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				METAL_SHADER_COMPILER_OPTIONS = (
+					"-O0",
+					"-gline-tables-only",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abysspaint.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = -Onone;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		13B07F8A1A680F5B00A75B9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AbyssPaint.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = AbyssPaint/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				METAL_SHADER_COMPILER_OPTIONS = (
+					"-O3",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abysspaint.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -O;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		13B07F851A680F5B00A75B9A /* Build configuration list for PBXProject "AbyssPaint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13B07F861A680F5B00A75B9A /* Debug */,
+				13B07F871A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+		};
+		13B07F8E1A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AbyssPaint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13B07F891A680F5B00A75B9A /* Debug */,
+				13B07F8A1A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+
+};
+	rootObject = 13B07F821A680F5B00A75B9A /* Project object */;
+}
