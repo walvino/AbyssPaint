@@ -9,39 +9,60 @@ jobs:
   build:
     name: Build AbyssPaint for macOS
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List available Xcode versions
+      - name: Show environment
         run: |
-          ls -la /Applications/ | grep Xcode
+          echo "=== Runner ==="
+          uname -a
+          sw_vers
+          echo "=== Xcode versions ==="
+          ls -la /Applications/ | grep -i xcode
+          echo "=== Default xcodebuild ==="
           xcodebuild -version
 
-      - name: Select Xcode (latest available)
+      - name: Select Xcode 15.4 (if available) or latest
         run: |
-          XCODE_PATH=$(ls -d /Applications/Xcode*.app | tail -1)
-          echo "Using: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH"
-          xcodebuild -version
+          if [ -d "/Applications/Xcode_15.4.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_15.4.app
+          elif [ -d "/Applications/Xcode_15.3.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_15.3.app
+          elif [ -d "/Applications/Xcode_15.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_15.2.app
+          else
+            XCODE_LATEST=$(ls -d /Applications/Xcode*.app | tail -1)
+            sudo xcode-select -s "$XCODE_LATEST"
+          fi
+          echo "Selected: $(xcodebuild -version)"
 
       - name: Show project structure
         run: |
           cd AbyssPaint
           xcodebuild -list -project AbyssPaint.xcodeproj
 
-      - name: Create shared scheme (if needed)
+      - name: Create shared scheme
         run: |
           cd AbyssPaint
-          # Create a scheme for the target
-          xcodebuild -project AbyssPaint.xcodeproj -target AbyssPaint -scheme AbyssPaint -destination 'platform=macOS' -showBuildSettings 2>&1 | head -20 || true
+          # Create a shared scheme for the target
+          xcodebuild -project AbyssPaint.xcodeproj \
+            -target AbyssPaint \
+            -scheme AbyssPaint \
+            -destination 'platform=macOS' \
+            -showBuildSettings 2>&1 | head -30 || true
+          
+          # Try to create scheme via xcodebuild (modern approach)
+          xcodebuild -project AbyssPaint.xcodeproj \
+            -createScheme 2>&1 || true
 
-      - name: Build Release
+      - name: Build with target (full log on failure)
+        id: build_target
         run: |
           cd AbyssPaint
-          # Build with explicit settings
+          set +e
           xcodebuild build \
             -project AbyssPaint.xcodeproj \
             -target AbyssPaint \
@@ -53,24 +74,55 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SWIFT_VERSION=6.0 \
             MACOSX_DEPLOYMENT_TARGET=14.0 \
-            2>&1 | tail -100
+            2>&1 | tee build_target.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          echo "Exit code: $BUILD_EXIT"
+          if [ $BUILD_EXIT -ne 0 ]; then
+            echo "=== BUILD FAILED - Full log ==="
+            cat build_target.log
+          fi
+          exit $BUILD_EXIT
+
+      - name: If target failed, try with scheme
+        if: failure() && steps.build_target.outcome == 'failure'
+        run: |
+          cd AbyssPaint
+          # Try to build with scheme (may need to be created)
+          xcodebuild build \
+            -project AbyssPaint.xcodeproj \
+            -scheme AbyssPaint \
+            -configuration Release \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_VERSION=6.0 \
+            MACOSX_DEPLOYMENT_TARGET=14.0 \
+            2>&1 | tee build_scheme.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          echo "Exit code: $BUILD_EXIT"
+          if [ $BUILD_EXIT -ne 0 ]; then
+            echo "=== SCHEME BUILD FAILED - Full log ==="
+            cat build_scheme.log
+          fi
+          exit $BUILD_EXIT
 
       - name: Locate .app
+        if: success()
         id: locate
         run: |
           APP_PATH=$(find AbyssPaint/build -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "ERROR: .app not found"
-            echo "Searching build directory:"
             find AbyssPaint/build -type d -name "*.app" 2>/dev/null | head -10
-            echo "---"
-            ls -la AbyssPaint/build/
             exit 1
           fi
           echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
           ls -la "$APP_PATH"
 
       - name: Verify app structure
+        if: success()
         run: |
           APP_PATH="${{ steps.locate.outputs.app_path }}"
           echo "=== App bundle ==="
@@ -81,12 +133,14 @@ jobs:
           file "$APP_PATH/Contents/MacOS/AbyssPaint"
 
       - name: Create zip artifact
+        if: success()
         run: |
           APP_PATH="${{ steps.locate.outputs.app_path }}"
           ditto -c -k --keepParent "$APP_PATH" AbyssPaint-macOS.zip
           echo "Created AbyssPaint-macOS.zip ($(du -h AbyssPaint-macOS.zip | cut -f1))"
 
       - name: Upload artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: AbyssPaint-macOS
@@ -105,3 +159,13 @@ jobs:
           echo "2. Unzip" >> $GITHUB_STEP_SUMMARY
           echo "3. Right-click \`AbyssPaint.app\` → **Open**" >> $GITHUB_STEP_SUMMARY
           echo "4. Click **Open** in Gatekeeper dialog" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            AbyssPaint/build_target.log
+            AbyssPaint/build_scheme.log
+          retention-days: 7
