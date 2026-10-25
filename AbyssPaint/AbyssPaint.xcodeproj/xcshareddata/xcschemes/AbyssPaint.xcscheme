@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A100003D"
+               BlueprintIdentifier = "B100003E"
                BuildableName = "AbyssPaint.app"
                BlueprintName = "AbyssPaint"
                ReferencedContainer = "container:AbyssPaint.xcodeproj">
@@ -43,7 +43,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A100003D"
+            BlueprintIdentifier = "B100003E"
             BuildableName = "AbyssPaint.app"
             BlueprintName = "AbyssPaint"
             ReferencedContainer = "container:AbyssPaint.xcodeproj">
@@ -60,7 +60,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A100003D"
+            BlueprintIdentifier = "B100003E"
             BuildableName = "AbyssPaint.app"
             BlueprintName = "AbyssPaint"
             ReferencedContainer = "container:AbyssPaint.xcodeproj">

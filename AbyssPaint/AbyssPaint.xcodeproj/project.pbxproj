@@ -7,69 +7,70 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1000001 /* AbyssPaint.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = A1000002 /* AbyssPaint.entitlements */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		A1000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000004 /* Assets.xcassets */; };
-		A1000005 /* AbyssPaint.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = A1000006 /* AbyssPaint.xcdatamodeld */; };
-		A1000007 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000008 /* main.swift */; };
-		A1000009 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000A /* AppDelegate.swift */; };
-		A100000B /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000C /* CanvasView.swift */; };
-		A100000D /* CanvasEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000E /* CanvasEngine.swift */; };
-		A100000F /* BrushEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000010 /* BrushEngine.swift */; };
-		A1000011 /* RenderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000012 /* RenderEngine.swift */; };
-		A1000013 /* TabletInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000014 /* TabletInput.swift */; };
-		A1000015 /* FileIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000016 /* FileIO.swift */; };
-		A1000017 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000018 /* Preferences.swift */; };
-		A1000019 /* Shaders.metal in Resources */ = {isa = PBXBuildFile; fileRef = A100001A /* Shaders.metal */; };
-		A100001B /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001C /* PersistenceController.swift */; };
-		A100001D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001E /* Models.swift */; };
-		A100001F /* Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000020 /* Stroke.swift */; };
-		A1000021 /* Brush.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000022 /* Brush.swift */; };
-		A1000023 /* AnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000024 /* AnimationEngine.swift */; };
-		A1000025 /* AnimationTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000026 /* AnimationTimeline.swift */; };
-		A1000027 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000028 /* SettingsView.swift */; };
-		A1000029 /* AdjustmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002A /* AdjustmentEngine.swift */; };
-		A100002B /* LayerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002C /* LayerPanel.swift */; };
-		A100002D /* BrushLibraryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100002E /* BrushLibraryPanel.swift */; };
-		A100002F /* ColorPickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000030 /* ColorPickerPanel.swift */; };
-		A1000031 /* ReferenceWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000032 /* ReferenceWindow.swift */; };
-		A1000033 /* NewCanvasSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034 /* NewCanvasSheet.swift */; };
-		A1000035 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000036 /* ContentView.swift */; };
+		B1000001 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B1000002 /* Info.plist */; };
+		B1000003 /* AbyssPaint.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = B1000004 /* AbyssPaint.entitlements */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		B1000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000006 /* Assets.xcassets */; };
+		B1000007 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000008 /* main.swift */; };
+		B1000009 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000A /* AppDelegate.swift */; };
+		B100000B /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000C /* CanvasView.swift */; };
+		B100000D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000E /* ContentView.swift */; };
+		B100000F /* CanvasEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* CanvasEngine.swift */; };
+		B1000011 /* BrushEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000012 /* BrushEngine.swift */; };
+		B1000013 /* RenderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014 /* RenderEngine.swift */; };
+		B1000015 /* TabletInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* TabletInput.swift */; };
+		B1000017 /* FileIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000018 /* FileIO.swift */; };
+		B1000019 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001A /* Preferences.swift */; };
+		B100001B /* Shaders.metal in Resources */ = {isa = PBXBuildFile; fileRef = B100001C /* Shaders.metal */; };
+		B100001D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100001E /* PersistenceController.swift */; };
+		B100001F /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* Models.swift */; };
+		B1000021 /* Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000022 /* Stroke.swift */; };
+		B1000023 /* Brush.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000024 /* Brush.swift */; };
+		B1000025 /* AnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000026 /* AnimationEngine.swift */; };
+		B1000027 /* AnimationTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000028 /* AnimationTimeline.swift */; };
+		B1000029 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100002A /* SettingsView.swift */; };
+		B100002B /* AdjustmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100002C /* AdjustmentEngine.swift */; };
+		B100002D /* LayerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100002E /* LayerPanel.swift */; };
+		B100002F /* BrushLibraryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000030 /* BrushLibraryPanel.swift */; };
+		B1000031 /* ColorPickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000032 /* ColorPickerPanel.swift */; };
+		B1000033 /* ReferenceWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000034 /* ReferenceWindow.swift */; };
+		B1000035 /* NewCanvasSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000036 /* NewCanvasSheet.swift */; };
+		B1000037 /* Brush.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000038 /* Brush.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A1000002 /* AbyssPaint.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path =AbyssPaint.entitlements; sourceTree = "<group>"; };
-		A1000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path =Resources/Assets.xcassets; sourceTree = "<group>"; };
-		A1000006 /* AbyssPaint.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path =AbyssPaint.xcdatamodeld; sourceTree = "<group>"; };
-		A1000008 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =main.swift; sourceTree = "<group>"; };
-		A100000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AppDelegate.swift; sourceTree = "<group>"; };
-		A100000C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =CanvasView.swift; sourceTree = "<group>"; };
-		A100000E /* CanvasEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =CanvasEngine.swift; sourceTree = "<group>"; };
-		A1000010 /* BrushEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =BrushEngine.swift; sourceTree = "<group>"; };
-		A1000012 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =RenderEngine.swift; sourceTree = "<group>"; };
-		A1000014 /* TabletInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =TabletInput.swift; sourceTree = "<group>"; };
-		A1000016 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =FileIO.swift; sourceTree = "<group>"; };
-		A1000018 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Preferences.swift; sourceTree = "<group>"; };
-		A100001A /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path =Resources/Shaders.metal; sourceTree = "<group>"; };
-		A100001C /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =PersistenceController.swift; sourceTree = "<group>"; };
-		A100001E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Models.swift; sourceTree = "<group>"; };
-		A1000020 /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Stroke.swift; sourceTree = "<group>"; };
-		A1000022 /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =Brush.swift; sourceTree = "<group>"; };
-		A1000024 /* AnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AnimationEngine.swift; sourceTree = "<group>"; };
-		A1000026 /* AnimationTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AnimationTimeline.swift; sourceTree = "<group>"; };
-		A1000028 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =SettingsView.swift; sourceTree = "<group>"; };
-		A100002A /* AdjustmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =AdjustmentEngine.swift; sourceTree = "<group>"; };
-		A100002C /* LayerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =LayerPanel.swift; sourceTree = "<group>"; };
-		A100002E /* BrushLibraryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =BrushLibraryPanel.swift; sourceTree = "<group>"; };
-		A1000030 /* ColorPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ColorPickerPanel.swift; sourceTree = "<group>"; };
-		A1000032 /* ReferenceWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ReferenceWindow.swift; sourceTree = "<group>"; };
-		A1000034 /* NewCanvasSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =NewCanvasSheet.swift; sourceTree = "<group>"; };
-		A1000036 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path =ContentView.swift; sourceTree = "<group>"; };
-		A1000037 /* AbyssPaint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbyssPaint.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1000038 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path =Info.plist; sourceTree = "<group>"; };
+		B1000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B1000004 /* AbyssPaint.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AbyssPaint.entitlements; sourceTree = "<group>"; };
+		B1000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
+		B1000008 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		B100000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B100000C /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
+		B100000E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B1000010 /* CanvasEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasEngine.swift; sourceTree = "<group>"; };
+		B1000012 /* BrushEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrushEngine.swift; sourceTree = "<group>"; };
+		B1000014 /* RenderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderEngine.swift; sourceTree = "<group>"; };
+		B1000016 /* TabletInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabletInput.swift; sourceTree = "<group>"; };
+		B1000018 /* FileIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIO.swift; sourceTree = "<group>"; };
+		B100001A /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		B100001C /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Resources/Shaders.metal; sourceTree = "<group>"; };
+		B100001E /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		B1000020 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B1000022 /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stroke.swift; sourceTree = "<group>"; };
+		B1000024 /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brush.swift; sourceTree = "<group>"; };
+		B1000026 /* AnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationEngine.swift; sourceTree = "<group>"; };
+		B1000028 /* AnimationTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationTimeline.swift; sourceTree = "<group>"; };
+		B100002A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B100002C /* AdjustmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdjustmentEngine.swift; sourceTree = "<group>"; };
+		B100002E /* LayerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerPanel.swift; sourceTree = "<group>"; };
+		B1000030 /* BrushLibraryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrushLibraryPanel.swift; sourceTree = "<group>"; };
+		B1000032 /* ColorPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerPanel.swift; sourceTree = "<group>"; };
+		B1000034 /* ReferenceWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceWindow.swift; sourceTree = "<group>"; };
+		B1000036 /* NewCanvasSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewCanvasSheet.swift; sourceTree = "<group>"; };
+		B1000038 /* Brush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brush.swift; sourceTree = "<group>"; };
+		B1000039 /* AbyssPaint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AbyssPaint.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A1000039 /* Frameworks */ = {
+		B100003A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -79,53 +80,53 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A100003A /* Project Group */ = {
+		B100003B /* Project Group */ = {
 			isa = PBXGroup;
 			children = (
-				A100003B /* AbyssPaint */,
-				A100003C /* Products */,
+				B100003C /* AbyssPaint */,
+				B100003D /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A100003B /* AbyssPaint */ = {
+		B100003C /* AbyssPaint */ = {
 			isa = PBXGroup;
 			children = (
-				A1000038 /* Info.plist */,
-				A1000002 /* AbyssPaint.entitlements */,
-				A1000004 /* Assets.xcassets */,
-				A1000006 /* AbyssPaint.xcdatamodeld */,
-				A1000008 /* main.swift */,
-				A100000A /* AppDelegate.swift */,
-				A100000C /* CanvasView.swift */,
-				A100000E /* CanvasEngine.swift */,
-				A1000010 /* BrushEngine.swift */,
-				A1000012 /* RenderEngine.swift */,
-				A1000014 /* TabletInput.swift */,
-				A1000016 /* FileIO.swift */,
-				A1000018 /* Preferences.swift */,
-				A100001A /* Shaders.metal */,
-				A100001C /* PersistenceController.swift */,
-				A100001E /* Models.swift */,
-				A1000020 /* Stroke.swift */,
-				A1000022 /* Brush.swift */,
-				A1000024 /* AnimationEngine.swift */,
-				A1000026 /* AnimationTimeline.swift */,
-				A1000028 /* SettingsView.swift */,
-				A100002A /* AdjustmentEngine.swift */,
-				A100002C /* LayerPanel.swift */,
-				A100002E /* BrushLibraryPanel.swift */,
-				A1000030 /* ColorPickerPanel.swift */,
-				A1000032 /* ReferenceWindow.swift */,
-				A1000034 /* NewCanvasSheet.swift */,
-				A1000036 /* ContentView.swift */,
+				B1000002 /* Info.plist */,
+				B1000004 /* AbyssPaint.entitlements */,
+				B1000006 /* Assets.xcassets */,
+				B1000008 /* main.swift */,
+				B100000A /* AppDelegate.swift */,
+				B100000C /* CanvasView.swift */,
+				B100000E /* ContentView.swift */,
+				B1000010 /* CanvasEngine.swift */,
+				B1000012 /* BrushEngine.swift */,
+				B1000014 /* RenderEngine.swift */,
+				B1000016 /* TabletInput.swift */,
+				B1000018 /* FileIO.swift */,
+				B100001A /* Preferences.swift */,
+				B100001C /* Shaders.metal */,
+				B100001E /* PersistenceController.swift */,
+				B1000020 /* Models.swift */,
+				B1000022 /* Stroke.swift */,
+				B1000024 /* Brush.swift */,
+				B1000026 /* AnimationEngine.swift */,
+				B1000028 /* AnimationTimeline.swift */,
+				B100002A /* SettingsView.swift */,
+				B100002C /* AdjustmentEngine.swift */,
+				B100002E /* LayerPanel.swift */,
+				B1000030 /* BrushLibraryPanel.swift */,
+				B1000032 /* ColorPickerPanel.swift */,
+				B1000034 /* ReferenceWindow.swift */,
+				B1000036 /* NewCanvasSheet.swift */,
+				B1000038 /* Brush.swift */,
 			);
-			path = AbyssPaint;
+			path = .;
 			sourceTree = "<group>";
 		};
-		A100003C /* Products */ = {
+		B100003D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A1000037 /* AbyssPaint.app */,
+				B1000039 /* AbyssPaint.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -133,13 +134,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A100003D /* AbyssPaint */ = {
+		B100003E /* AbyssPaint */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A100003E /* Build configuration list for PBXNativeTarget "AbyssPaint" */;
+			buildConfigurationList = B100003F /* Build configuration list for PBXNativeTarget "AbyssPaint" */;
 			buildPhases = (
-				A100003F /* Sources */,
-				A1000039 /* Frameworks */,
-				A1000040 /* Resources */,
+				B1000040 /* Sources */,
+				B100003A /* Frameworks */,
+				B1000041 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -147,25 +148,25 @@
 			);
 			name = AbyssPaint;
 			productName = AbyssPaint;
-			productReference = A1000037 /* AbyssPaint.app */;
+			productReference = B1000039 /* AbyssPaint.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		A1000041 /* Project object */ = {
+		B1000042 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftMigration = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					A100003D = {
+					B100003E = {
 						CreatedOnToolsVersion = 16.0;
 						DevelopmentTeam = "";
 					};
 				};
 			};
-			buildConfigurationList = A1000042 /* Build configuration list for PBXProject "AbyssPaint" */;
+			buildConfigurationList = B1000043 /* Build configuration list for PBXProject "AbyssPaint" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -173,65 +174,66 @@
 				en,
 				Base,
 			);
-			mainGroup = A100003A;
-			productRefGroup = A100003C;
+			mainGroup = B100003B;
+			productRefGroup = B100003D;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A100003D /* AbyssPaint */,
+				B100003E /* AbyssPaint */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A1000040 /* Resources */ = {
+		B1000041 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000001 /* AbyssPaint.entitlements in Resources */,
-				A1000003 /* Assets.xcassets in Resources */,
-				A1000005 /* AbyssPaint.xcdatamodeld in Resources */,
-				A1000019 /* Shaders.metal in Resources */,
+				B1000001 /* Info.plist in Resources */,
+				B1000003 /* AbyssPaint.entitlements in Resources */,
+				B1000005 /* Assets.xcassets in Resources */,
+				B100001B /* Shaders.metal in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A100003F /* Sources */ = {
+		B1000040 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000007 /* main.swift in Sources */,
-				A1000009 /* AppDelegate.swift in Sources */,
-				A100000B /* CanvasView.swift in Sources */,
-				A100000D /* CanvasEngine.swift in Sources */,
-				A100000F /* BrushEngine.swift in Sources */,
-				A1000011 /* RenderEngine.swift in Sources */,
-				A1000013 /* TabletInput.swift in Sources */,
-				A1000015 /* FileIO.swift in Sources */,
-				A1000017 /* Preferences.swift in Sources */,
-				A100001B /* PersistenceController.swift in Sources */,
-				A100001D /* Models.swift in Sources */,
-				A100001F /* Stroke.swift in Sources */,
-				A1000021 /* Brush.swift in Sources */,
-				A1000023 /* AnimationEngine.swift in Sources */,
-				A1000025 /* AnimationTimeline.swift in Sources */,
-				A1000027 /* SettingsView.swift in Sources */,
-				A1000029 /* AdjustmentEngine.swift in Sources */,
-				A100002B /* LayerPanel.swift in Sources */,
-				A100002D /* BrushLibraryPanel.swift in Sources */,
-				A100002F /* ColorPickerPanel.swift in Sources */,
-				A1000031 /* ReferenceWindow.swift in Sources */,
-				A1000033 /* NewCanvasSheet.swift in Sources */,
-				A1000035 /* ContentView.swift in Sources */,
+				B1000007 /* main.swift in Sources */,
+				B1000009 /* AppDelegate.swift in Sources */,
+				B100000B /* CanvasView.swift in Sources */,
+				B100000D /* ContentView.swift in Sources */,
+				B100000F /* CanvasEngine.swift in Sources */,
+				B1000011 /* BrushEngine.swift in Sources */,
+				B1000013 /* RenderEngine.swift in Sources */,
+				B1000015 /* TabletInput.swift in Sources */,
+				B1000017 /* FileIO.swift in Sources */,
+				B1000019 /* Preferences.swift in Sources */,
+				B100001D /* PersistenceController.swift in Sources */,
+				B100001F /* Models.swift in Sources */,
+				B1000021 /* Stroke.swift in Sources */,
+				B1000023 /* Brush.swift in Sources */,
+				B1000025 /* AnimationEngine.swift in Sources */,
+				B1000027 /* AnimationTimeline.swift in Sources */,
+				B1000029 /* SettingsView.swift in Sources */,
+				B100002B /* AdjustmentEngine.swift in Sources */,
+				B100002D /* LayerPanel.swift in Sources */,
+				B100002F /* BrushLibraryPanel.swift in Sources */,
+				B1000031 /* ColorPickerPanel.swift in Sources */,
+				B1000033 /* ReferenceWindow.swift in Sources */,
+				B1000035 /* NewCanvasSheet.swift in Sources */,
+				B1000037 /* Brush.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A1000043 /* Debug */ = {
+		B1000044 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -275,7 +277,7 @@
 			};
 			name = Debug;
 		};
-		A1000044 /* Release */ = {
+		B1000042 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -295,7 +297,6 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 				);
-				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -316,20 +317,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1000042 /* Build configuration list for PBXProject "AbyssPaint" */ = {
+		B1000045 /* Build configuration list for PBXProject "AbyssPaint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A1000043 /* Debug */,
-				A1000044 /* Release */,
+				B1000044 /* Debug */,
+				B1000042 /* Release */,
 			);
 			defaultConfigurationName = Release;
 			defaultConfigurationIsVisible = 0;
 		};
-		A100003E /* Build configuration list for PBXNativeTarget "AbyssPaint" */ = {
+		B100003F /* Build configuration list for PBXNativeTarget "AbyssPaint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A1000043 /* Debug */,
-				A1000044 /* Release */,
+				B1000044 /* Debug */,
+				B1000042 /* Release */,
 			);
 			defaultConfigurationName = Release;
 			defaultConfigurationIsVisible = 0;
@@ -337,5 +338,5 @@
 /* End XCConfigurationList section */
 
 };
-	rootObject = A1000041 /* Project object */;
+	rootObject = B1000042 /* Project object */;
 }
