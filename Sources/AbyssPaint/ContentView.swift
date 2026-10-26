@@ -1,45 +1,99 @@
 import SwiftUI
-
-enum Theme {
-    static let background = Color(red: 0.10, green: 0.10, blue: 0.11)
-    static let panel = Color(red: 0.125, green: 0.128, blue: 0.14)
-    static let raised = Color(red: 0.17, green: 0.175, blue: 0.19)
-    static let accent = Color(red: 0.851, green: 0.227, blue: 0.157)
-    static let accentDeep = Color(red: 0.62, green: 0.13, blue: 0.09)
-    static let green = Color(red: 0.376, green: 0.804, blue: 0.451)
-    static let text = Color.white.opacity(0.92)
-    static let dim = Color.white.opacity(0.52)
-}
-
-// MARK: - Content
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject private var store: DocumentStore
 
+    @State private var showBrushes = true
+    @State private var showLayers = true
+    @State private var showColor = ProcessInfo.processInfo.environment["ABYSS_SHOW_COLOR"] != nil
+    @State private var showNewCanvas = ProcessInfo.processInfo.environment["ABYSS_SHOW_NEW"] != nil
+
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar()
-            Divider().overlay(Color.black.opacity(0.6))
+        ZStack(alignment: .top) {
+            Theme.background.ignoresSafeArea()
 
-            HStack(spacing: 0) {
-                BrushSidebar()
-                    .frame(width: 238)
+            CanvasRepresentable(store: store)
+                .ignoresSafeArea()
 
-                Divider().overlay(Color.black.opacity(0.6))
+            VStack(spacing: 0) {
+                TopBar(showBrushes: $showBrushes,
+                       showLayers: $showLayers,
+                       showColor: $showColor,
+                       showNewCanvas: $showNewCanvas)
+                    .padding(.top, 10)
+                    .padding(.leading, 86)
+                    .padding(.trailing, 14)
 
-                CanvasRepresentable(store: store)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Spacer(minLength: 0)
 
-                Divider().overlay(Color.black.opacity(0.6))
-
-                LayersPanel()
-                    .frame(width: 270)
+                HStack {
+                    Spacer()
+                    BottomDock()
+                    Spacer()
+                }
+                .padding(.bottom, 14)
             }
-
-            Divider().overlay(Color.black.opacity(0.6))
-            StatusBar()
         }
-        .background(Theme.background)
+        .sheet(isPresented: $showNewCanvas) {
+            NewCanvasSheet()
+                .preferredColorScheme(.dark)
+        }
+        .overlay(alignment: .topLeading) {
+            if showBrushes {
+                BrushPanel(onClose: { showBrushes = false })
+                    .frame(maxHeight: 660)
+                    .padding(.leading, 16)
+                    .padding(.top, 72)
+                    .padding(.bottom, 74)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if showLayers {
+                LayersPanel(onClose: { showLayers = false })
+                    .frame(maxHeight: 520)
+                    .padding(.trailing, 16)
+                    .padding(.top, 72)
+                    .padding(.bottom, 74)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if showColor {
+                ColorPanel()
+                    .padding(.top, 72)
+                    .padding(.trailing, showLayers ? 340 : 16)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let toast = store.toast {
+                Text(toast)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundStyle(Theme.text)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Capsule(style: .continuous)
+                                    .fill(Color(red: 0.09, green: 0.095, blue: 0.105).opacity(0.9))
+                            )
+                            .overlay(
+                                Capsule(style: .continuous)
+                                    .strokeBorder(Theme.hairline, lineWidth: 1)
+                            )
+                    )
+                    .padding(.bottom, 74)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: store.toast)
+        .animation(.easeOut(duration: 0.18), value: showBrushes)
+        .animation(.easeOut(duration: 0.18), value: showLayers)
+        .animation(.easeOut(duration: 0.15), value: showColor)
         .preferredColorScheme(.dark)
     }
 }
@@ -49,47 +103,40 @@ struct ContentView: View {
 struct TopBar: View {
     @EnvironmentObject private var store: DocumentStore
 
+    @Binding var showBrushes: Bool
+    @Binding var showLayers: Bool
+    @Binding var showColor: Bool
+    @Binding var showNewCanvas: Bool
+
     var body: some View {
-        HStack(spacing: 14) {
-            HStack(spacing: 8) {
+        HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Theme.accent)
+
                 Text("ABYSSPAINT")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
                     .tracking(1.5)
                     .foregroundStyle(Theme.text)
             }
 
-            Rectangle()
-                .fill(Color.white.opacity(0.12))
-                .frame(width: 1, height: 20)
+            separator
 
             HStack(spacing: 2) {
                 ForEach(Tool.allCases) { tool in
-                    Button {
-                        store.tool = tool
-                    } label: {
-                        Image(systemName: tool.symbolName)
-                            .font(.system(size: 13, weight: .semibold))
-                            .frame(width: 36, height: 26)
-                            .foregroundStyle(store.tool == tool ? Color.white : Theme.dim)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(store.tool == tool ? Theme.accent : Color.clear)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .help(tool.title)
+                    ToolButton(tool: tool)
                 }
             }
             .padding(3)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Theme.raised)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.black.opacity(0.28))
             )
 
-            HStack(spacing: 4) {
+            separator
+
+            HStack(spacing: 3) {
                 IconButton(symbol: "arrow.uturn.backward", help: "Undo (⌘Z)") {
                     store.undo()
                 }
@@ -101,147 +148,154 @@ struct TopBar: View {
                 .disabled(!store.canRedo)
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 4)
 
-            ColorSwatch()
-
-            IconButton(symbol: "arrow.up.left.and.arrow.down.right", help: "Fit canvas to window") {
-                store.fitRequest += 1
-            }
-
-            Button {
-                store.newDocument()
-            } label: {
-                Label("New", systemImage: "plus.square")
-                    .font(.system(size: 12, weight: .semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Theme.raised)
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(spacing: 0) {
+                Text(store.documentName)
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Theme.text)
-            }
-            .buttonStyle(.plain)
+                    .lineLimit(1)
 
-            Button {
+                Text("\(Int(store.canvasSize.width)) × \(Int(store.canvasSize.height))")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Theme.dim)
+            }
+
+            Spacer(minLength: 4)
+
+            IconButton(symbol: "paintbrush.pointed",
+                       help: "Brush library",
+                       active: showBrushes) {
+                showBrushes.toggle()
+            }
+
+            IconButton(symbol: "square.3.layers.3d",
+                       help: "Layers",
+                       active: showLayers) {
+                showLayers.toggle()
+            }
+
+            colorButton
+
+            IconButton(symbol: "square.and.arrow.up", help: "Export PNG (⌘E)") {
                 store.exportPNG()
-            } label: {
-                Label("Export", systemImage: "square.and.arrow.up")
-                    .font(.system(size: 12, weight: .semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(LinearGradient(colors: [Theme.accent, Theme.accentDeep],
-                                               startPoint: .topLeading,
-                                               endPoint: .bottomTrailing))
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    .foregroundStyle(Color.white)
             }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Theme.panel)
-    }
-}
 
-// MARK: - Small pieces
-
-struct IconButton: View {
-    let symbol: String
-    let help: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .frame(width: 28, height: 26)
-                .background(Theme.raised)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .foregroundStyle(Theme.text)
-        }
-        .buttonStyle(.plain)
-        .help(help)
-    }
-}
-
-struct ColorSwatch: View {
-    @EnvironmentObject private var store: DocumentStore
-
-    private var binding: Binding<Color> {
-        Binding(
-            get: { Color(nsColor: store.color) },
-            set: { newValue in
-                let converted = NSColor(newValue).usingColorSpace(.sRGB)
-                store.color = converted ?? .white
+            IconButton(symbol: "plus", help: "New canvas") {
+                showNewCanvas = true
             }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 46)
+        .background(
+            Capsule(style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule(style: .continuous)
+                        .fill(Color(red: 0.075, green: 0.08, blue: 0.09).opacity(0.86))
+                )
+                .overlay(
+                    Capsule(style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
         )
     }
 
-    var body: some View {
-        ColorPicker("Color", selection: binding, supportsOpacity: false)
-            .labelsHidden()
-            .frame(width: 34, height: 26)
-            .help("Brush color")
+    private var separator: some View {
+        Rectangle()
+            .fill(Theme.hairline)
+            .frame(width: 1, height: 20)
     }
-}
 
-struct SliderRow: View {
-    let title: String
-    @Binding var value: CGFloat
-    let range: ClosedRange<CGFloat>
-    let display: String
+    private var colorButton: some View {
+        Button {
+            showColor.toggle()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Color(nsColor: store.color))
+                    .frame(width: 20, height: 20)
+                    .overlay(
+                        Circle().strokeBorder(Color.white.opacity(0.35), lineWidth: 1)
+                    )
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.dim)
-                Spacer()
-                Text(display)
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Theme.text)
+                Circle()
+                    .strokeBorder(showColor ? Theme.accent : Color.clear, lineWidth: 2)
+                    .frame(width: 27, height: 27)
             }
-            Slider(value: $value, in: range)
-                .tint(Theme.accent)
-                .controlSize(.small)
+            .frame(width: 30, height: 28)
         }
+        .buttonStyle(.plain)
+        .help("Color")
     }
 }
 
-struct SectionTitle: View {
-    let text: String
+// MARK: - Bottom dock
 
-    var body: some View {
-        Text(text.uppercased())
-            .font(.system(size: 10, weight: .bold))
-            .tracking(1.2)
-            .foregroundStyle(Theme.dim)
-    }
-}
-
-// MARK: - Status bar
-
-struct StatusBar: View {
+struct BottomDock: View {
     @EnvironmentObject private var store: DocumentStore
 
     var body: some View {
-        HStack(spacing: 14) {
-            Text("\(Int(store.canvasSize.width)) × \(Int(store.canvasSize.height)) px")
-            Text("•")
-            Text("\(store.layers.count) layer\(store.layers.count == 1 ? "" : "s")")
-            Text("•")
-            Text(store.tool.title)
+        HStack(spacing: 11) {
+            HStack(spacing: 7) {
+                Image(systemName: store.tool.symbolName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
 
-            Spacer()
+                Circle()
+                    .fill(Color(nsColor: store.color))
+                    .frame(width: 14, height: 14)
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.3), lineWidth: 1))
+            }
+            .frame(width: 46)
 
-            Text("Space + drag to pan  ·  ⌥ scroll to zoom  ·  double-click to fit")
-                .foregroundStyle(Theme.dim)
+            DockSlider(title: "Size",
+                       value: $store.brushSize,
+                       range: 1...400,
+                       display: "\(Int(store.brushSize))")
+
+            dockSeparator
+
+            DockSlider(title: "Opacity",
+                       value: $store.brushOpacity,
+                       range: 0.02...1,
+                       display: "\(Int(store.brushOpacity * 100))%")
+
+            dockSeparator
+
+            IconButton(symbol: "arrow.uturn.backward", help: "Undo") {
+                store.undo()
+            }
+            .disabled(!store.canUndo)
+
+            IconButton(symbol: "arrow.uturn.forward", help: "Redo") {
+                store.redo()
+            }
+            .disabled(!store.canRedo)
+
+            dockSeparator
+
+            IconButton(symbol: "rotate.left", help: "Rotate canvas left") {
+                store.rotateCanvas(by: -.pi / 12)
+            }
+
+            IconButton(symbol: "rotate.right", help: "Rotate canvas right") {
+                store.rotateCanvas(by: .pi / 12)
+            }
+
+            IconButton(symbol: "arrow.up.left.and.arrow.down.right", help: "Fit canvas") {
+                store.fitCanvas()
+            }
         }
-        .font(.system(size: 10.5, weight: .medium))
-        .foregroundStyle(Theme.text.opacity(0.75))
         .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-        .background(Theme.panel)
+        .frame(height: 46)
+        .background(DockBackground())
+    }
+
+    private var dockSeparator: some View {
+        Rectangle()
+            .fill(Theme.hairline)
+            .frame(width: 1, height: 18)
     }
 }

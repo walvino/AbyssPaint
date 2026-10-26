@@ -6,6 +6,7 @@ struct CanvasRepresentable: NSViewRepresentable {
 
     final class Coordinator {
         var lastFitRequest = 0
+        var lastRotationCommand = 0
         var lastCanvasSize: CGSize = .zero
     }
 
@@ -21,6 +22,11 @@ struct CanvasRepresentable: NSViewRepresentable {
 
     func updateNSView(_ nsView: CanvasNSView, context: Context) {
         nsView.store = store
+
+        if context.coordinator.lastRotationCommand != store.rotationCommandID {
+            context.coordinator.lastRotationCommand = store.rotationCommandID
+            nsView.applyRotationCommand(store.rotationCommand)
+        }
 
         if context.coordinator.lastFitRequest != store.fitRequest {
             context.coordinator.lastFitRequest = store.fitRequest

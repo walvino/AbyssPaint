@@ -12,6 +12,7 @@ struct AbyssPaintApp: App {
                 .environmentObject(store)
                 .frame(minWidth: 1000, minHeight: 680)
         }
+        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1320, height: 860)
         .commands {
             AbyssPaintCommands()
@@ -26,14 +27,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Diagnostics used during development.
         if let path = ProcessInfo.processInfo.environment["ABYSS_SNAPSHOT"] {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                let window = NSApp.windows.first { ($0.contentView?.bounds.width ?? 0) > 300 }
-                if let view = window?.contentView,
-                   let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                if ProcessInfo.processInfo.environment["ABYSS_DEMO"] != nil {
+                    SelfTest.paintDemo(DocumentStore.shared)
+                }
+                let windows = NSApp.windows.filter { ($0.contentView?.bounds.width ?? 0) > 200 }
+                for (index, window) in windows.enumerated() {
+                    guard let view = window.contentView,
+                          let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }
                     view.cacheDisplay(in: view.bounds, to: rep)
-                    if let data = rep.representation(using: .png, properties: [:]) {
-                        try? data.write(to: URL(fileURLWithPath: path))
-                    }
+                    guard let data = rep.representation(using: .png, properties: [:]) else { continue }
+                    let out = index == 0 ? path : path.replacingOccurrences(of: ".png", with: "-\(index).png")
+                    try? data.write(to: URL(fileURLWithPath: out))
                 }
                 NSApp.terminate(nil)
             }
@@ -55,7 +60,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 enum SelfTest {
     static func run() {
         let store = DocumentStore.shared
+        paintDemo(store)
 
+        // Eyedropper sample
+        if let sampled = store.sampleColor(at: CGPoint(x: 250, y: 930)) {
+            print("SELFTEST sampled color: \(sampled.usingColorSpace(.sRGB) ?? sampled)")
+        } else {
+            print("SELFTEST sampled color: FAILED")
+        }
+
+        // Save and reopen the project
+        let projectURL = URL(fileURLWithPath: "/tmp/abyss-selftest.abysspaint")
+        try? FileManager.default.removeItem(at: projectURL)
+        do {
+            try store.saveProject(to: projectURL)
+            store.newDocument(width: 640, height: 480)
+            try store.openProject(from: projectURL)
+            print("SELFTEST project roundtrip layers=\(store.layers.count) size=\(store.canvasSize)")
+        } catch {
+            print("SELFTEST project roundtrip FAILED: \(error)")
+        }
+
+        // Eraser pass through the green line
+        store.tool = .eraser
+        store.brushSize = 60
+        var previous = CGPoint(x: 800, y: 1000)
+        store.beginStroke(at: previous, pressure: 1)
+        for step in 1...30 {
+            let t = CGFloat(step) / 30
+            let point = CGPoint(x: 800 + t * 200, y: 1000 - t * 220)
+            store.continueStroke(from: previous, to: point, fromPressure: 1, toPressure: 1)
+            previous = point
+        }
+        store.endStroke()
+        store.tool = .brush
+
+        if let image = store.flattenedImage() {
+            let rep = NSBitmapImageRep(cgImage: image)
+            if let data = rep.representation(using: .png, properties: [:]) {
+                try? data.write(to: URL(fileURLWithPath: "/tmp/abyss-selftest.png"))
+            }
+        }
+    }
+
+    static func paintDemo(_ store: DocumentStore) {
         // Red pressure ramp
         store.color = NSColor(srgbRed: 0.851, green: 0.227, blue: 0.157, alpha: 1)
         store.brushSize = 46
@@ -102,26 +150,6 @@ enum SelfTest {
         }
         store.endStroke()
 
-        // Eraser pass through the green line
-        store.tool = .eraser
-        store.brushSize = 60
-        previous = CGPoint(x: 800, y: 1000)
-        store.beginStroke(at: previous, pressure: 1)
-        for step in 1...30 {
-            let t = CGFloat(step) / 30
-            let point = CGPoint(x: 800 + t * 200, y: 1000 - t * 220)
-            store.continueStroke(from: previous, to: point, fromPressure: 1, toPressure: 1)
-            previous = point
-        }
-        store.endStroke()
-        store.tool = .brush
-
-        if let image = store.flattenedImage() {
-            let rep = NSBitmapImageRep(cgImage: image)
-            if let data = rep.representation(using: .png, properties: [:]) {
-                try? data.write(to: URL(fileURLWithPath: "/tmp/abyss-selftest.png"))
-            }
-        }
     }
 }
 
@@ -150,11 +178,33 @@ struct AbyssPaintCommands: Commands {
             .disabled(!store.canRedo)
         }
 
-        CommandGroup(after: .saveItem) {
+        CommandGroup(replacing: .saveItem) {
+            Button("Save") {
+                store.saveDocument()
+            }
+            .keyboardShortcut("s", modifiers: .command)
+
+            Button("Save As…") {
+                store.saveDocumentAs()
+            }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+
+            Button("Open…") {
+                store.openDocument()
+            }
+            .keyboardShortcut("o", modifiers: .command)
+
+            Divider()
+
             Button("Export as PNG…") {
                 store.exportPNG()
             }
             .keyboardShortcut("e", modifiers: .command)
+
+            Button("Import Image as Layer…") {
+                store.importImage()
+            }
+            .keyboardShortcut("i", modifiers: [.command, .shift])
 
             Divider()
 
@@ -172,6 +222,28 @@ struct AbyssPaintCommands: Commands {
                 store.tool = store.tool == .brush ? .eraser : .brush
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
+
+            Divider()
+
+            Button("Fit Canvas") {
+                store.fitCanvas()
+            }
+            .keyboardShortcut("0", modifiers: .command)
+
+            Button("Reset Canvas Rotation") {
+                store.resetCanvasRotation()
+            }
+            .keyboardShortcut("0", modifiers: [.command, .option])
+
+            Button("Rotate Canvas Left") {
+                store.rotateCanvas(by: -.pi / 12)
+            }
+            .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
+
+            Button("Rotate Canvas Right") {
+                store.rotateCanvas(by: .pi / 12)
+            }
+            .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
         }
     }
 }

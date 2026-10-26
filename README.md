@@ -10,12 +10,16 @@ with pressure-sensitive brushes, layers and PNG export.
 
 ## Features
 
-- Pressure-sensitive brush engine (stamps with spacing, hardness, flow)
-- Eraser, soft airbrush, pencil, ink and marker presets
-- Layers with visibility and opacity
-- Undo / redo per stroke
-- Zoom, pan, fit-to-window
-- Export to PNG
+- Procreate-style floating interface: top bar, brush studio, layers panel, colour panel and bottom dock
+- Pressure-sensitive brush engine (stamps with spacing, hardness, flow, grain)
+- Brush presets with generated stroke previews: round, soft airbrush, pencil, studio ink, marker, soft eraser
+- Layers with visibility, opacity, 17 blend modes, duplicate, merge down, flip, reorder, import, clear
+- Undo / redo for the full layer stack (24 steps)
+- Zoom, pan, pinch, two-finger rotation plus canvas rotate controls
+- Eyedropper tool (or ⌥-click), stabilisation, recent colour swatches
+- Save / open `.abysspaint` projects and export PNG
+- Universal binary (Apple Silicon + Intel), macOS 14+
+- Bundle identifier: `com.abysspaint.mac`
 
 ## Build locally
 
@@ -57,10 +61,17 @@ beyond the vendor's own macOS driver.
 | Action | Shortcut |
 | --- | --- |
 | Undo / Redo | ⌘Z / ⇧⌘Z |
+| Save / Save As | ⌘S / ⇧⌘S |
+| Open project | ⌘O |
 | Export PNG | ⌘E |
 | New canvas | ⌘N |
 | Brush size | ⌘[ / ⌘] |
 | Toggle eraser | ⇧⌘E |
+| Brush / eraser / eyedropper | B / E / I |
+| Sample colour | ⌥ + click |
+| Fit canvas | ⌘0 or double-click |
+| Reset canvas rotation | ⌥⌘0 |
+| Rotate canvas | ⌥⌘← / ⌥⌘→ |
 | Pan | Space + drag, middle mouse, two-finger scroll |
-| Zoom | ⌥ + scroll, pinch |
-| Fit canvas | Double-click |
+| Zoom | ⌘ + scroll, pinch |
+| Rotate | Two-finger rotate |

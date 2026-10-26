@@ -36,6 +36,57 @@ enum BrushRenderer {
         return image
     }
 
+    // MARK: - Grain
+
+    private static var grainCache: [String: CGImage] = [:]
+    private static var grainKeys: [String] = []
+
+    /// A full-canvas alpha mask used to break up brush edges (texture grain).
+    static func grainMask(width: Int, height: Int, strength: CGFloat) -> CGImage? {
+        guard width > 0, height > 0, strength > 0.01 else { return nil }
+
+        let rounded = (min(max(strength, 0), 1) * 20).rounded() / 20
+        let key = "\(width)x\(height)x\(rounded)"
+
+        if let cached = grainCache[key] {
+            return cached
+        }
+
+        guard let bitmap = Bitmap(width: width, height: height),
+              let data = bitmap.context.data else {
+            return nil
+        }
+
+        let bytesPerRow = bitmap.context.bytesPerRow
+        let pointer = data.assumingMemoryBound(to: UInt8.self)
+        let amount = Double(rounded) * 0.85
+
+        for y in 0..<height {
+            let row = y * bytesPerRow
+            for x in 0..<width {
+                let random = Double.random(in: 0...1)
+                let alpha = 1.0 - pow(random, 2.2) * amount
+                let value = UInt8((alpha * 255).rounded())
+                let offset = row + x * 4
+                pointer[offset] = value
+                pointer[offset + 1] = value
+                pointer[offset + 2] = value
+                pointer[offset + 3] = value
+            }
+        }
+
+        guard let image = bitmap.image else { return nil }
+
+        grainCache[key] = image
+        grainKeys.append(key)
+        while grainKeys.count > 3 {
+            let oldest = grainKeys.removeFirst()
+            grainCache.removeValue(forKey: oldest)
+        }
+
+        return image
+    }
+
     private static func makeDab(color: NSColor, hardness: CGFloat) -> CGImage? {
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
               let ctx = CGContext(

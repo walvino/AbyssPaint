@@ -7,8 +7,9 @@ final class CanvasNSView: NSView {
         didSet { needsDisplay = true }
     }
 
-    // View transform (view points -> canvas pixels)
+    // View transform (canvas pixels -> view points)
     private var scale: CGFloat = 1
+    private var rotation: CGFloat = 0
     private var offset: CGPoint = .zero
     private var fitted = false
     private var userAdjusted = false
@@ -19,6 +20,7 @@ final class CanvasNSView: NSView {
     private var spaceDown = false
     private var lastCanvasPoint: CGPoint?
     private var lastPressure: CGFloat = 1
+    private var smoothedPoint: CGPoint?
     private var lastDragPoint: CGPoint = .zero
     private var hoverPoint: CGPoint?
     private var trackingAreaRef: NSTrackingArea?
@@ -51,40 +53,83 @@ final class CanvasNSView: NSView {
         fitted = true
     }
 
-    func fitToWindow() {
-        guard let store, bounds.width > 10, bounds.height > 10 else { return }
+    // MARK: - Transform
 
-        let margin: CGFloat = 48
-        let availableWidth = max(10, bounds.width - margin * 2)
-        let availableHeight = max(10, bounds.height - margin * 2)
+    private var canvasCenter: CGPoint {
+        guard let store else { return .zero }
+        return CGPoint(x: store.canvasSize.width / 2, y: store.canvasSize.height / 2)
+    }
+
+    private func localTransform() -> CGAffineTransform {
+        let center = canvasCenter
+        var transform = CGAffineTransform.identity
+        transform = transform.translatedBy(x: center.x, y: center.y)
+        transform = transform.rotated(by: rotation)
+        transform = transform.scaledBy(x: scale, y: scale)
+        transform = transform.translatedBy(x: -center.x, y: -center.y)
+        return transform
+    }
+
+    private var fullTransform: CGAffineTransform {
+        localTransform().concatenating(
+            CGAffineTransform(translationX: offset.x, y: offset.y)
+        )
+    }
+
+    func fitToWindow() {
+        guard let store, bounds.width > 20, bounds.height > 20 else { return }
+
+        let sideInset: CGFloat = 62
+        let topInset: CGFloat = 96
+        let bottomInset: CGFloat = 96
+
+        let availableWidth = max(20, bounds.width - sideInset * 2)
+        let availableHeight = max(20, bounds.height - topInset - bottomInset)
         let canvas = store.canvasSize
 
+        rotation = 0
         scale = min(availableWidth / canvas.width, availableHeight / canvas.height)
         scale = min(max(scale, 0.02), 8)
 
-        offset = CGPoint(
-            x: (bounds.width - canvas.width * scale) / 2,
-            y: (bounds.height - canvas.height * scale) / 2
-        )
+        let center = canvasCenter
+        let bandCenterY = bottomInset + availableHeight / 2
+        offset = CGPoint(x: bounds.midX - center.x, y: bandCenterY - center.y)
 
+        userAdjusted = false
         needsDisplay = true
     }
 
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-
-        if let existing = trackingAreaRef {
-            removeTrackingArea(existing)
+    func applyRotationCommand(_ command: DocumentStore.CanvasRotationCommand) {
+        switch command {
+        case .rotate(let angle):
+            rotation += angle
+        case .reset:
+            rotation = 0
         }
+        userAdjusted = true
+        needsDisplay = true
+    }
 
-        let area = NSTrackingArea(
-            rect: bounds,
-            options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
-            owner: self,
-            userInfo: nil
-        )
-        addTrackingArea(area)
-        trackingAreaRef = area
+    private func place(anchor: CGPoint, at viewPoint: CGPoint) {
+        let moved = anchor.applying(localTransform())
+        offset = CGPoint(x: viewPoint.x - moved.x, y: viewPoint.y - moved.y)
+    }
+
+    private func zoom(by factor: CGFloat, around viewPoint: CGPoint) {
+        guard factor.isFinite, factor > 0 else { return }
+        let anchor = viewPoint.applying(fullTransform.inverted())
+        scale = min(max(scale * factor, 0.03), 16)
+        place(anchor: anchor, at: viewPoint)
+        userAdjusted = true
+        needsDisplay = true
+    }
+
+    private func rotate(by angle: CGFloat, around viewPoint: CGPoint) {
+        let anchor = viewPoint.applying(fullTransform.inverted())
+        rotation += angle
+        place(anchor: anchor, at: viewPoint)
+        userAdjusted = true
+        needsDisplay = true
     }
 
     // MARK: - Drawing
@@ -92,45 +137,40 @@ final class CanvasNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
 
-        context.setFillColor(NSColor(calibratedRed: 0.075, green: 0.078, blue: 0.086, alpha: 1).cgColor)
+        context.setFillColor(NSColor(calibratedRed: 0.055, green: 0.058, blue: 0.065, alpha: 1).cgColor)
         context.fill(bounds)
 
         guard let store else { return }
 
-        let canvasRect = CGRect(
-            origin: offset,
-            size: CGSize(
-                width: store.canvasSize.width * scale,
-                height: store.canvasSize.height * scale
-            )
-        )
+        let paperPath = canvasPathInViewSpace(store: store)
 
-        // Paper + drop shadow
+        // Paper + shadow
         context.saveGState()
         context.setShadow(
-            offset: CGSize(width: 0, height: -6),
-            blur: 26,
-            color: NSColor.black.withAlphaComponent(0.6).cgColor
+            offset: CGSize(width: 0, height: -4),
+            blur: 28,
+            color: NSColor.black.withAlphaComponent(0.65).cgColor
         )
+        context.addPath(paperPath)
         context.setFillColor(NSColor.white.cgColor)
-        context.fill(canvasRect)
+        context.fillPath()
         context.restoreGState()
 
         // Layers
         context.saveGState()
-        context.translateBy(x: offset.x, y: offset.y)
-        context.scaleBy(x: scale, y: scale)
-
-        let documentRect = store.canvasRect
-        context.clip(to: documentRect)
+        context.concatenate(fullTransform)
+        context.clip(to: store.canvasRect)
         context.interpolationQuality = .high
 
+        let documentRect = store.canvasRect
         let activeIndex = store.activeLayerIndex
 
         for (index, layer) in store.layers.enumerated() {
             if layer.isVisible, let image = layer.bitmap.image {
                 context.setAlpha(CGFloat(layer.opacity))
+                context.setBlendMode(layer.blendMode.cgBlendMode)
                 context.draw(image, in: documentRect)
+                context.setBlendMode(.normal)
             }
 
             if index == activeIndex,
@@ -138,6 +178,7 @@ final class CanvasNSView: NSView {
                store.tool == .brush,
                let stroke = store.strokeBitmap.image {
                 context.setAlpha(store.brushOpacity)
+                context.setBlendMode(.normal)
                 context.draw(stroke, in: documentRect)
             }
         }
@@ -146,15 +187,26 @@ final class CanvasNSView: NSView {
         context.restoreGState()
 
         // Canvas border
-        context.setStrokeColor(NSColor.white.withAlphaComponent(0.14).cgColor)
+        context.addPath(paperPath)
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.18).cgColor)
         context.setLineWidth(1)
-        context.stroke(canvasRect.insetBy(dx: -0.5, dy: -0.5))
+        context.strokePath()
 
         drawBrushCursor(in: context, store: store)
     }
 
+    private func canvasPathInViewSpace(store: DocumentStore) -> CGPath {
+        let path = CGMutablePath()
+        path.addRect(store.canvasRect)
+        var transform = fullTransform
+        return path.copy(using: &transform) ?? path
+    }
+
     private func drawBrushCursor(in context: CGContext, store: DocumentStore) {
-        guard let hover = hoverPoint, !isPainting, window?.isKeyWindow == true else { return }
+        guard let hover = hoverPoint,
+              !isPainting,
+              store.tool != .eyedropper,
+              window?.isKeyWindow == true else { return }
 
         let diameter = max(6, store.brushSize * scale)
         let rect = CGRect(
@@ -180,12 +232,10 @@ final class CanvasNSView: NSView {
     }
 
     private func canvasPoint(_ event: NSEvent) -> CGPoint? {
-        guard scale > 0 else { return nil }
         let point = viewPoint(event)
-        return CGPoint(
-            x: (point.x - offset.x) / scale,
-            y: (point.y - offset.y) / scale
-        )
+        let canvas = point.applying(fullTransform.inverted())
+        guard canvas.x.isFinite, canvas.y.isFinite else { return nil }
+        return canvas
     }
 
     private func pressure(for event: NSEvent) -> CGFloat {
@@ -201,27 +251,27 @@ final class CanvasNSView: NSView {
         window?.makeFirstResponder(self)
         hoverPoint = viewPoint(event)
 
-        if event.clickCount == 2 {
-            userAdjusted = false
-            fitToWindow()
-            return
-        }
-
         if spaceDown {
             beginPan(event)
             return
         }
 
-        guard let store,
-              let point = canvasPoint(event),
-              store.canvasRect.contains(point),
-              store.activeLayerIndex != nil
-        else { return }
+        guard let store, let point = canvasPoint(event) else { return }
+
+        if store.tool == .eyedropper || event.modifierFlags.contains(.option) {
+            if let sampled = store.sampleColor(at: point) {
+                store.setColor(sampled)
+            }
+            return
+        }
+
+        guard store.canvasRect.contains(point), store.activeLayerIndex != nil else { return }
 
         let value = pressure(for: event)
         isPainting = true
         lastCanvasPoint = point
         lastPressure = value
+        smoothedPoint = point
 
         store.beginStroke(at: point, pressure: value)
         needsDisplay = true
@@ -233,7 +283,19 @@ final class CanvasNSView: NSView {
             return
         }
 
-        guard isPainting, let store, let point = canvasPoint(event) else { return }
+        guard isPainting, let store, var point = canvasPoint(event) else { return }
+
+        let smoothing = store.brushSmoothing
+        if smoothing > 0.001 {
+            if smoothedPoint == nil { smoothedPoint = point }
+            let factor = max(0.06, 1 - smoothing * 0.92)
+            let previous = smoothedPoint ?? point
+            point = CGPoint(
+                x: previous.x + (point.x - previous.x) * factor,
+                y: previous.y + (point.y - previous.y) * factor
+            )
+            smoothedPoint = point
+        }
 
         let value = pressure(for: event)
         if let last = lastCanvasPoint {
@@ -261,6 +323,7 @@ final class CanvasNSView: NSView {
         store.endStroke()
         isPainting = false
         lastCanvasPoint = nil
+        smoothedPoint = nil
         hoverPoint = viewPoint(event)
         needsDisplay = true
     }
@@ -282,7 +345,24 @@ final class CanvasNSView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    // MARK: - Middle-button pan
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+
+        if let existing = trackingAreaRef {
+            removeTrackingArea(existing)
+        }
+
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        trackingAreaRef = area
+    }
+
+    // MARK: - Pan
 
     override func otherMouseDown(with event: NSEvent) {
         beginPan(event)
@@ -316,7 +396,7 @@ final class CanvasNSView: NSView {
         (spaceDown ? NSCursor.openHand : NSCursor.arrow).set()
     }
 
-    // MARK: - Zoom
+    // MARK: - Zoom & rotation
 
     override func scrollWheel(with event: NSEvent) {
         let point = viewPoint(event)
@@ -336,32 +416,47 @@ final class CanvasNSView: NSView {
         zoom(by: 1 + event.magnification, around: viewPoint(event))
     }
 
-    private func zoom(by factor: CGFloat, around point: CGPoint) {
-        guard factor.isFinite, factor > 0, scale > 0 else { return }
-
-        let canvasX = (point.x - offset.x) / scale
-        let canvasY = (point.y - offset.y) / scale
-
-        let newScale = min(max(scale * factor, 0.03), 16)
-        scale = newScale
-        offset = CGPoint(
-            x: point.x - canvasX * newScale,
-            y: point.y - canvasY * newScale
-        )
-
-        userAdjusted = true
-        needsDisplay = true
+    override func rotate(with event: NSEvent) {
+        let angle = -CGFloat(event.rotation) * .pi / 180
+        rotate(by: angle, around: CGPoint(x: bounds.midX, y: bounds.midY))
     }
 
     // MARK: - Keyboard
 
     override func keyDown(with event: NSEvent) {
+        guard let store else {
+            super.keyDown(with: event)
+            return
+        }
+
         if event.keyCode == 49 { // space
             spaceDown = true
             NSCursor.openHand.set()
             return
         }
-        super.keyDown(with: event)
+
+        guard !event.modifierFlags.contains(.command),
+              let characters = event.charactersIgnoringModifiers?.lowercased() else {
+            super.keyDown(with: event)
+            return
+        }
+
+        switch characters {
+        case "b":
+            store.tool = .brush
+        case "e":
+            store.tool = .eraser
+        case "i":
+            store.tool = .eyedropper
+        case "[":
+            store.brushSize = max(1, store.brushSize / 1.15)
+        case "]":
+            store.brushSize = min(400, store.brushSize * 1.15)
+        case "0":
+            store.fitCanvas()
+        default:
+            super.keyDown(with: event)
+        }
     }
 
     override func keyUp(with event: NSEvent) {
