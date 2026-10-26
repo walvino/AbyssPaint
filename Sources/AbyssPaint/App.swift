@@ -40,7 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     let out = index == 0 ? path : path.replacingOccurrences(of: ".png", with: "-\(index).png")
                     try? data.write(to: URL(fileURLWithPath: out))
                 }
-                NSApp.terminate(nil)
+                exit(0)
             }
         }
 
@@ -54,6 +54,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let url = urls.first(where: { $0.pathExtension == "abysspaint" }) else { return }
+        do {
+            try DocumentStore.shared.openProject(from: url)
+        } catch {
+            DocumentStore.shared.showToast("Could not open \(url.lastPathComponent)")
+        }
     }
 }
 
@@ -159,7 +168,7 @@ struct AbyssPaintCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Canvas") {
-                store.newDocument()
+                store.showsNewCanvasSheet = true
             }
             .keyboardShortcut("n", modifiers: .command)
         }

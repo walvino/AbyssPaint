@@ -192,6 +192,7 @@ final class DocumentStore: ObservableObject {
     @Published private(set) var canUndo: Bool = false
     @Published private(set) var canRedo: Bool = false
     @Published var toast: String?
+    @Published var showsNewCanvasSheet: Bool = ProcessInfo.processInfo.environment["ABYSS_SHOW_NEW"] != nil
 
     let presets = BrushPreset.builtIn
 

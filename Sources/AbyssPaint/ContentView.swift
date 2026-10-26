@@ -7,7 +7,6 @@ struct ContentView: View {
     @State private var showBrushes = true
     @State private var showLayers = true
     @State private var showColor = ProcessInfo.processInfo.environment["ABYSS_SHOW_COLOR"] != nil
-    @State private var showNewCanvas = ProcessInfo.processInfo.environment["ABYSS_SHOW_NEW"] != nil
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -19,8 +18,7 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 TopBar(showBrushes: $showBrushes,
                        showLayers: $showLayers,
-                       showColor: $showColor,
-                       showNewCanvas: $showNewCanvas)
+                       showColor: $showColor)
                     .padding(.top, 10)
                     .padding(.leading, 86)
                     .padding(.trailing, 14)
@@ -35,7 +33,7 @@ struct ContentView: View {
                 .padding(.bottom, 14)
             }
         }
-        .sheet(isPresented: $showNewCanvas) {
+        .sheet(isPresented: $store.showsNewCanvasSheet) {
             NewCanvasSheet()
                 .preferredColorScheme(.dark)
         }
@@ -106,7 +104,6 @@ struct TopBar: View {
     @Binding var showBrushes: Bool
     @Binding var showLayers: Bool
     @Binding var showColor: Bool
-    @Binding var showNewCanvas: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -182,7 +179,7 @@ struct TopBar: View {
             }
 
             IconButton(symbol: "plus", help: "New canvas") {
-                showNewCanvas = true
+                store.showsNewCanvasSheet = true
             }
         }
         .padding(.horizontal, 12)
