@@ -1,6 +1,49 @@
 import SwiftUI
 import AppKit
 
+struct Palette: Identifiable, Equatable {
+    let name: String
+    let colors: [NSColor]
+
+    var id: String { name }
+}
+
+enum Palettes {
+    static func c(_ hexes: [Int]) -> [NSColor] {
+        hexes.map(NSColor.init(hex:))
+    }
+
+    static let all: [Palette] = [
+        Palette(name: "Default", colors: c([
+            0x0A0A0B, 0x26262A, 0x3F3F46, 0x585860, 0x73737C, 0x8E8E97, 0xB4B4BB, 0xD9D9DE, 0xFFFFFF,
+            0xD93A28, 0xE8702A, 0xF2B93B, 0x9BCB3C, 0x60A83E, 0x2E9E7E, 0x33A8C7, 0x3B6FD4, 0x8C4FC4
+        ])),
+        Palette(name: "Skin", colors: c([
+            0xFDE9DC, 0xF9D7C4, 0xF3C4AC, 0xEBAF93, 0xE09A7C, 0xD38667, 0xC17355, 0xAC6146, 0x96533A,
+            0x7F4630, 0x693A27, 0x54301F, 0x41251A, 0xB4523F, 0xA8452F, 0x8E3A2B, 0x6E2C22, 0x4E2019
+        ])),
+        Palette(name: "Nature", colors: c([
+            0x1F3A2B, 0x2E5B3E, 0x3F7A4C, 0x5B9A5E, 0x86B96A, 0xB7D48B, 0xDDE6B4, 0xF2EAD3, 0xC9A16B,
+            0xA97C4B, 0x855E36, 0x5F4326, 0x7FB3C9, 0x5B93B0, 0x3D6F8C, 0x27506B, 0x8C6F5A, 0x5C4738
+        ])),
+        Palette(name: "Neon", colors: c([
+            0xFF2D95, 0xFF5E5B, 0xFF9F1C, 0xFFD60A, 0xC6F91B, 0x6EEB2E, 0x2EEB9B, 0x2EEBD6, 0x2EC5FF,
+            0x2E7BFF, 0x6B4BFF, 0xB14BFF, 0xFF4BD6, 0xFF7AE0, 0xB9FF6B, 0x6BFFB9, 0xFFFFFF, 0x101014
+        ]))
+    ]
+}
+
+private extension NSColor {
+    convenience init(hex: Int) {
+        self.init(
+            srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+            green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+}
+
 struct ColorPanel: View {
     @EnvironmentObject private var store: DocumentStore
 
@@ -8,6 +51,7 @@ struct ColorPanel: View {
     @State private var saturation: CGFloat = 0.83
     @State private var brightness: CGFloat = 0.85
     @State private var isSyncing = false
+    @State private var paletteIndex = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -43,6 +87,56 @@ struct ColorPanel: View {
                                 .fill(Color(nsColor: color))
                                 .frame(width: 19, height: 19)
                                 .overlay(Circle().strokeBorder(Color.white.opacity(0.22), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            Divider().overlay(Theme.hairline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    SectionTitle(text: "Palettes")
+
+                    Spacer()
+
+                    Menu {
+                        ForEach(Palettes.all) { palette in
+                            Button(palette.name) {
+                                paletteIndex = Palettes.all.firstIndex(of: palette) ?? 0
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(Palettes.all[paletteIndex].name)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Theme.text)
+
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 7.5, weight: .bold))
+                                .foregroundStyle(Theme.dim)
+                        }
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                }
+
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 9),
+                          spacing: 6) {
+                    ForEach(Array(Palettes.all[paletteIndex].colors.enumerated()), id: \.offset) { _, color in
+                        Button {
+                            store.setColor(color)
+                            syncFromStore()
+                        } label: {
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(Color(nsColor: color))
+                                .frame(height: 18)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                                )
                         }
                         .buttonStyle(.plain)
                     }

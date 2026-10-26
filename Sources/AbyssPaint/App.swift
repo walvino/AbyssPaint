@@ -110,6 +110,25 @@ enum SelfTest {
                 try? data.write(to: URL(fileURLWithPath: "/tmp/abyss-selftest.png"))
             }
         }
+
+        // Symmetry check on a scratch canvas
+        store.newDocument(width: 400, height: 400)
+        store.symmetry = .vertical
+        store.tool = .brush
+        store.brushSize = 24
+        store.brushHardness = 1
+        store.color = NSColor(srgbRed: 0.376, green: 0.804, blue: 0.451, alpha: 1)
+        store.beginStroke(at: CGPoint(x: 60, y: 200), pressure: 1)
+        store.continueStroke(from: CGPoint(x: 60, y: 200),
+                            to: CGPoint(x: 140, y: 200),
+                            fromPressure: 1,
+                            toPressure: 1)
+        store.endStroke()
+        store.symmetry = .off
+
+        let mirroredLeft = store.sampleColor(at: CGPoint(x: 80, y: 200))
+        let mirroredRight = store.sampleColor(at: CGPoint(x: 320, y: 200))
+        print("SELFTEST symmetry left=\(mirroredLeft?.usingColorSpace(.sRGB) ?? .clear) right=\(mirroredRight?.usingColorSpace(.sRGB) ?? .clear)")
     }
 
     static func paintDemo(_ store: DocumentStore) {

@@ -174,6 +174,8 @@ struct TopBar: View {
 
             colorButton
 
+            symmetryMenu
+
             IconButton(symbol: "square.and.arrow.up", help: "Export PNG (⌘E)") {
                 store.exportPNG()
             }
@@ -203,6 +205,48 @@ struct TopBar: View {
         Rectangle()
             .fill(Theme.hairline)
             .frame(width: 1, height: 20)
+    }
+
+    private var symmetryMenu: some View {
+        Menu {
+            ForEach(SymmetryMode.allCases) { mode in
+                Button {
+                    store.symmetry = mode
+                } label: {
+                    if store.symmetry == mode {
+                        Label(mode.title, systemImage: "checkmark")
+                    } else {
+                        Text(mode.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: store.symmetry.symbolName)
+                    .font(.system(size: 12, weight: .semibold))
+
+                if store.symmetry != .off {
+                    Text(store.symmetry.title)
+                        .font(.system(size: 9.5, weight: .bold))
+                }
+            }
+            .foregroundStyle(store.symmetry == .off ? Theme.text : Color.white)
+            .padding(.horizontal, store.symmetry == .off ? 0 : 8)
+            .frame(minWidth: 30, minHeight: 28)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(store.symmetry == .off ? Color.white.opacity(0.06) : Theme.accent.opacity(0.30))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(store.symmetry == .off ? Color.clear : Theme.accent.opacity(0.85),
+                                  lineWidth: 1)
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Symmetry drawing guide")
     }
 
     private var colorButton: some View {

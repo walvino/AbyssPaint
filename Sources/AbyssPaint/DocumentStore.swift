@@ -28,6 +28,35 @@ enum Tool: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Symmetry
+
+enum SymmetryMode: String, CaseIterable, Identifiable {
+    case off
+    case vertical
+    case horizontal
+    case quadrant
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .off: return "Off"
+        case .vertical: return "Vertical"
+        case .horizontal: return "Horizontal"
+        case .quadrant: return "Quadrant"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .off: return "rectangle.split.1x1"
+        case .vertical: return "rectangle.split.2x1"
+        case .horizontal: return "rectangle.split.1x2"
+        case .quadrant: return "rectangle.split.2x2"
+        }
+    }
+}
+
 // MARK: - Blend modes
 
 enum LayerBlendMode: String, CaseIterable, Identifiable, Codable {
@@ -182,6 +211,7 @@ final class DocumentStore: ObservableObject {
         NSColor(srgbRed: 0.09, green: 0.09, blue: 0.10, alpha: 1)
     ]
     @Published var selectedPresetID: String = "round"
+    @Published var symmetry: SymmetryMode = .off
 
     // UI sync
     @Published var revision: Int = 0
@@ -448,17 +478,42 @@ final class DocumentStore: ObservableObject {
         let dabColor = tool == .brush ? color : NSColor.white
         guard let dab = BrushRenderer.dab(color: dabColor, hardness: brushHardness) else { return }
 
+        context.setAlpha(tool == .brush ? brushFlow : 1)
+
+        draw(dab: dab, at: point, diameter: diameter, in: context)
+
+        if symmetry != .off {
+            let width = canvasSize.width
+            let height = canvasSize.height
+            let mirroredX = CGPoint(x: width - point.x, y: point.y)
+            let mirroredY = CGPoint(x: point.x, y: height - point.y)
+            let mirroredXY = CGPoint(x: width - point.x, y: height - point.y)
+
+            switch symmetry {
+            case .off:
+                break
+            case .vertical:
+                draw(dab: dab, at: mirroredX, diameter: diameter, in: context)
+            case .horizontal:
+                draw(dab: dab, at: mirroredY, diameter: diameter, in: context)
+            case .quadrant:
+                draw(dab: dab, at: mirroredX, diameter: diameter, in: context)
+                draw(dab: dab, at: mirroredY, diameter: diameter, in: context)
+                draw(dab: dab, at: mirroredXY, diameter: diameter, in: context)
+            }
+        }
+
+        lastDabPoint = point
+    }
+
+    private func draw(dab: CGImage, at point: CGPoint, diameter: CGFloat, in context: CGContext) {
         let rect = CGRect(
             x: point.x - diameter / 2,
             y: point.y - diameter / 2,
             width: diameter,
             height: diameter
         )
-
-        context.setAlpha(tool == .brush ? brushFlow : 1)
         context.draw(dab, in: rect)
-
-        lastDabPoint = point
     }
 
     // MARK: Undo
