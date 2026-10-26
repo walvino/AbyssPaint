@@ -1,4 +1,4 @@
-name: Build macOS App (Minimal)
+name: Build AbyssPaint for macOS
 
 on:
   push:
@@ -7,84 +7,53 @@ on:
 
 jobs:
   build:
-    name: Build AbyssPaint for macOS
+    name: Build universal macOS app
     runs-on: macos-14
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show repo contents
+      - name: Toolchain
         run: |
-          echo "=== Root ==="
-          ls -la
-          echo "=== AbyssPaint dir ==="
-          ls -la AbyssPaint/
-
-      - name: Select Xcode 15.4
-        run: |
-          if [ -d "/Applications/Xcode_15.4.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.4.app
-          else
-            sudo xcode-select -s /Applications/Xcode_15.3.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode_15.2.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode_15.1.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode_15.0.app 2>/dev/null
-          fi
+          swift --version
           xcodebuild -version
 
-      - name: Build (from AbyssPaint dir where .xcodeproj now lives)
-        id: build
+      - name: Build arm64
+        run: swift build -c release --arch arm64 --scratch-path .build-arm64
+
+      - name: Build x86_64
+        run: swift build -c release --arch x86_64 --scratch-path .build-x86_64
+
+      - name: Assemble AbyssPaint.app
         run: |
-          cd AbyssPaint
-          xcodebuild build \
-            -project AbyssPaint.xcodeproj \
-            -target AbyssPaint \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee build.log
-          BUILD_EXIT=${PIPESTATUS[0]}
-          echo "BUILD_EXIT=$BUILD_EXIT" >> $GITHUB_OUTPUT
-          if [ $BUILD_EXIT -ne 0 ]; then
-            echo "=== BUILD FAILED - Full log ==="
-            cat build.log
-          else
-            echo "=== BUILD SUCCEEDED ==="
+          set -euo pipefail
+          ARM_BIN=$(swift build -c release --arch arm64 --scratch-path .build-arm64 --show-bin-path)
+          INTEL_BIN=$(swift build -c release --arch x86_64 --scratch-path .build-x86_64 --show-bin-path)
+
+          APP=dist/AbyssPaint.app
+          rm -rf dist
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+
+          lipo -create "$ARM_BIN/AbyssPaint" "$INTEL_BIN/AbyssPaint" -output "$APP/Contents/MacOS/AbyssPaint"
+          cp Support/Info.plist "$APP/Contents/Info.plist"
+          printf 'APPL????' > "$APP/Contents/PkgInfo"
+          chmod +x "$APP/Contents/MacOS/AbyssPaint"
+
+          if [ -f Support/AppIcon.icns ]; then
+            cp Support/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
           fi
 
-      - name: Find .app
-        if: steps.build.outputs.BUILD_EXIT == '0'
-        id: locate
-        run: |
-          cd AbyssPaint
-          APP_PATH=$(find . -name "AbyssPaint.app" -type d 2>/dev/null | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: .app not found"
-            find . -name "*.app" -type d 2>/dev/null
-            exit 1
-          fi
-          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
-          ls -la "$APP_PATH"
-
-      - name: Zip artifact
-        if: steps.build.outputs.BUILD_EXIT == '0'
-        run: |
-          cd AbyssPaint
-          APP_PATH="${{ steps.locate.outputs.app_path }}"
-          ditto -c -k --keepParent "$APP_PATH" AbyssPaint-macOS.zip
-          echo "Created $(du -h AbyssPaint-macOS.zip | cut -f1)"
+          codesign --force --deep --sign - "$APP"
+          lipo -info "$APP/Contents/MacOS/AbyssPaint"
+          ditto -c -k --keepParent "$APP" AbyssPaint-macOS.zip
+          shasum -a 256 AbyssPaint-macOS.zip
+          du -h AbyssPaint-macOS.zip
 
       - name: Upload app
-        if: steps.build.outputs.BUILD_EXIT == '0'
         uses: actions/upload-artifact@v4
         with:
           name: AbyssPaint-macOS
-          path: AbyssPaint/AbyssPaint-macOS.zip
-          retention-days: 7
-
-      - name: Upload build log (always)
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: AbyssPaint/build.log
-          retention-days: 7
+          path: AbyssPaint-macOS.zip
+          retention-days: 14

@@ -1,121 +1,66 @@
 # AbyssPaint
 
-A professional painting application for macOS, built with Swift, SwiftUI, Metal, and Core Data.
+A native macOS painting app built for graphics tablets (Wacom, Huion, XP-Pen)
+with pressure-sensitive brushes, layers and PNG export.
+
+- **Swift 5 + SwiftUI + AppKit + Core Graphics**
+- Built with Swift Package Manager (no Xcode project to corrupt)
+- Universal binary (Apple Silicon + Intel), macOS 14+
+- Bundle identifier: `com.abysspaint.mac`
 
 ## Features
 
-- **Metal-based rendering engine** with tile-based compositing for 8K+ canvases
-- **Pressure-sensitive brush engine** with 100+ parameters per brush
-- **Wacom/Huion/XP-Pen tablet support** via IOKit HID
-- **25 blend modes** with full layer stack (masks, clipping, groups)
-- **PSD import/export** with layer style preservation
-- **ColorSync-integrated color management** (sRGB, P3, CMYK)
-- **Animation Assist** with onion skinning and timeline
-- **Crash-safe autosave** with stroke-level recovery
+- Pressure-sensitive brush engine (stamps with spacing, hardness, flow)
+- Eraser, soft airbrush, pencil, ink and marker presets
+- Layers with visibility and opacity
+- Undo / redo per stroke
+- Zoom, pan, fit-to-window
+- Export to PNG
 
-## Requirements
+## Build locally
 
-- macOS 14.0 (Sonoma) or later
-- Xcode 15.0 or later
-- Apple Silicon (M1/M2/M3) or Intel Mac with Metal support
-- Graphics tablet (Wacom, Huion, XP-Pen, or compatible)
-
-## Building
-
-1. Open `AbyssPaint.xcodeproj` in Xcode
-2. Select your development team in Signing & Capabilities
-3. Build and run (⌘R)
-
-## Project Structure
-
-```
-AbyssPaint/
-├── AbyssPaint.xcodeproj/       # Xcode project
-├── AbyssPaint/                 # Main app target
-│   ├── Models/                 # Core Data models & Swift types
-│   │   ├── Models.swift        # NSManagedObject subclasses
-│   │   └── Stroke.swift        # Stroke, brush params, GPU structs
-│   ├── Views/                  # SwiftUI views
-│   │   ├── ContentView.swift   # Main window layout
-│   │   ├── CanvasView.swift    # MTKView wrapper
-│   │   ├── LayerPanel.swift    # Layer list & controls
-│   │   ├── BrushLibraryPanel.swift
-│   │   ├── ColorPickerPanel.swift
-│   │   ├── ReferenceWindow.swift
-│   │   ├── AnimationTimeline.swift
-│   │   ├── NewCanvasSheet.swift
-│   │   └── SettingsView.swift
-│   ├── ViewModels/             # (Future: MVVM separation)
-│   ├── RenderEngine/           # Metal rendering
-│   │   └── RenderEngine.swift  # Tile-based compositor
-│   ├── BrushEngine/            # Brush stroke generation
-│   │   └── BrushEngine.swift   # CPU/GPU stamp generation
-│   ├── CanvasEngine/           # High-level canvas logic
-│   │   └── CanvasEngine.swift  # Drawing, layers, tools
-│   ├── TabletInput/            # Tablet driver abstraction
-│   │   └── TabletInput.swift   # IOKit HID + NSEvent fallback
-│   ├── FileIO/                 # Import/export
-│   │   └── FileIO.swift        # .abysspaint, PSD, PNG, etc.
-│   ├── AdjustmentEngine/       # Non-destructive filters
-│   │   └── AdjustmentEngine.swift
-│   ├── AnimationEngine/        # Timeline & onion skin
-│   │   └── AnimationEngine.swift
-│   ├── Preferences/            # User settings
-│   │   └── Preferences.swift
-│   ├── Utilities/              # Helpers
-│   ├── Resources/
-│   │   ├── Assets.xcassets/    # App icon, colors
-│   │   ├── Brushes/            # Built-in brush definitions
-│   │   └── Shaders/            # Metal shaders
-│   │       └── Shaders.metal   # All GPU code
-│   ├── AbyssPaint.xcdatamodeld # Core Data model
-│   ├── PersistenceController.swift
-│   ├── AppDelegate.swift
-│   └── main.swift
-└── replica/                    # Replica skill spec (planning docs)
-    ├── recon.md
-    ├── architecture.md
-    ├── design/
-    │   ├── tokens.json
-│   │   └── components.md
-    ├── features.csv
-    ├── fixes.md
-    ├── brand.md
-    └── brand.json
+```bash
+swift build -c release
 ```
 
-## Key Technologies
+## Build the .app
 
-| Layer | Technology |
-|-------|------------|
-| UI | SwiftUI + AppKit (MTKView) |
-| Rendering | Metal 3 (tile-based, compute shaders) |
-| Persistence | Core Data + SQLite |
-| Tablet Input | IOKit HID (Wacom TabletDriverKit ready) |
-| Color | ColorSync + Core Image |
-| Animation | Core Animation + custom timeline |
+```bash
+swift build -c release
+mkdir -p dist/AbyssPaint.app/Contents/MacOS
+cp .build/release/AbyssPaint dist/AbyssPaint.app/Contents/MacOS/
+cp Support/Info.plist dist/AbyssPaint.app/Contents/Info.plist
+printf 'APPL????' > dist/AbyssPaint.app/Contents/PkgInfo
+codesign --force --deep --sign - dist/AbyssPaint.app
+```
 
-## Brush Engine
+## CI
 
-The brush engine uses a **stamp-based approach** optimized for Metal:
+`.github/workflows/build-macos.yml` builds a universal `.app` on GitHub Actions
+and uploads `AbyssPaint-macOS.zip` as an artifact.
 
-1. **CPU path** (default): Generates stamp positions/parameters in Swift
-2. **GPU path** (optional): Compute shader generates stamps in parallel
-3. **Rendering**: Instanced drawing of quad stamps with per-instance attributes
+## Install (unsigned build)
 
-Each brush has 100+ parameters organized into categories:
-- Stroke (spacing, streamline, jitter, taper)
-- Shape (source, rotation, scatter, grain)
-- Rendering (mode, flow, wetness, dilution)
-- Color Dynamics (pressure/tilt color, jitter)
-- Dynamics (speed, rotation, flip)
-- Tablet Mapping (pressure, tilt, azimuth → size/opacity/flow)
+1. Download `AbyssPaint-macOS.zip` from the latest Actions run.
+2. Unzip it.
+3. Right-click `AbyssPaint.app` → **Open** (first launch only).
+   If macOS still refuses: `xattr -dr com.apple.quarantine /path/to/AbyssPaint.app`
 
-## License
+## Tablet support
 
-MIT License - See LICENSE file for details.
+Tablet pressure arrives through `NSEvent` (`subtype == .tabletPoint`); the brush
+engine maps it to size and opacity. No extra driver configuration is required
+beyond the vendor's own macOS driver.
 
-## Credits
+## Shortcuts
 
-Built using the [Replica skill](https://github.com/Jakeschincariol/replica-skill) methodology.
-Original Procreate by Savage Interactive.
+| Action | Shortcut |
+| --- | --- |
+| Undo / Redo | ⌘Z / ⇧⌘Z |
+| Export PNG | ⌘E |
+| New canvas | ⌘N |
+| Brush size | ⌘[ / ⌘] |
+| Toggle eraser | ⇧⌘E |
+| Pan | Space + drag, middle mouse, two-finger scroll |
+| Zoom | ⌥ + scroll, pinch |
+| Fit canvas | Double-click |
