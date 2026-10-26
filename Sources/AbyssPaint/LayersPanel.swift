@@ -126,6 +126,10 @@ struct LayerRow: View {
     @EnvironmentObject private var store: DocumentStore
     let index: Int
 
+    @State private var isRenaming = false
+    @State private var draftName = ""
+    @FocusState private var nameFocused: Bool
+
     private var layer: Layer {
         store.layers[index]
     }
@@ -151,10 +155,25 @@ struct LayerRow: View {
             thumbnail
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(layer.name)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.text)
-                    .lineLimit(1)
+                if isRenaming {
+                    TextField("Layer name", text: $draftName)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.text)
+                        .focused($nameFocused)
+                        .onSubmit(commitRename)
+                        .onExitCommand { isRenaming = false }
+                        .onAppear {
+                            draftName = layer.name
+                            nameFocused = true
+                        }
+                } else {
+                    Text(layer.name)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.text)
+                        .lineLimit(1)
+                        .onTapGesture(count: 2) { beginRename() }
+                }
 
                 Text("\(layer.blendMode.title) · \(Int(layer.opacity * 100))%")
                     .font(.system(size: 9.5))
@@ -163,6 +182,28 @@ struct LayerRow: View {
             }
 
             Spacer(minLength: 0)
+
+            Button {
+                store.setLayerAlphaLocked(!layer.isAlphaLocked, id: layer.id)
+            } label: {
+                Image(systemName: layer.isAlphaLocked ? "circle.lefthalf.filled" : "circle.lefthalf")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(layer.isAlphaLocked ? Theme.accent : Theme.dim.opacity(0.55))
+                    .frame(width: 18, height: 22)
+            }
+            .buttonStyle(.plain)
+            .help(layer.isAlphaLocked ? "Unlock alpha" : "Alpha lock")
+
+            Button {
+                store.setLayerLocked(!layer.isLocked, id: layer.id)
+            } label: {
+                Image(systemName: layer.isLocked ? "lock.fill" : "lock.open")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(layer.isLocked ? Theme.accent : Theme.dim.opacity(0.55))
+                    .frame(width: 18, height: 22)
+            }
+            .buttonStyle(.plain)
+            .help(layer.isLocked ? "Unlock layer" : "Lock layer")
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 8)
@@ -177,8 +218,30 @@ struct LayerRow: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            store.activeLayerID = layer.id
+            if !isRenaming {
+                store.activeLayerID = layer.id
+            }
         }
+        .onDrag {
+            NSItemProvider(object: layer.id.uuidString as NSString)
+        }
+        .dropDestination(for: String.self) { items, _ in
+            guard let value = items.first, let id = UUID(uuidString: value) else { return false }
+            store.moveLayer(id: id, toIndex: index)
+            return true
+        }
+        .help("Double-click the name to rename · drag to reorder")
+    }
+
+    private func beginRename() {
+        draftName = layer.name
+        isRenaming = true
+        DispatchQueue.main.async { nameFocused = true }
+    }
+
+    private func commitRename() {
+        store.renameLayer(id: layer.id, to: draftName)
+        isRenaming = false
     }
 
     private var thumbnail: some View {

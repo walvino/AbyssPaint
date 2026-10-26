@@ -48,12 +48,68 @@ struct BrushPanel: View {
     }
 
     private var brushes: some View {
-        VStack(spacing: 7) {
-            ForEach(store.presets) { preset in
-                BrushRow(preset: preset)
+        VStack(alignment: .leading, spacing: 10) {
+            if !recentBrushes.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        SectionTitle(text: "Recent")
+                        Spacer()
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(recentBrushes) { preset in
+                                Button {
+                                    store.selectPreset(preset)
+                                } label: {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: preset.symbolName)
+                                            .font(.system(size: 9, weight: .semibold))
+
+                                        Text(preset.name)
+                                            .font(.system(size: 10, weight: .semibold))
+                                    }
+                                    .foregroundStyle(store.selectedPresetID == preset.id
+                                                     ? Color.white : Theme.text)
+                                    .padding(.horizontal, 9)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        Capsule(style: .continuous)
+                                            .fill(store.selectedPresetID == preset.id
+                                                  ? Theme.accent.opacity(0.32)
+                                                  : Color.white.opacity(0.06))
+                                    )
+                                    .overlay(
+                                        Capsule(style: .continuous)
+                                            .strokeBorder(store.selectedPresetID == preset.id
+                                                          ? Theme.accent.opacity(0.8)
+                                                          : Theme.hairline,
+                                                          lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 1)
+                    }
+                }
+            }
+
+            VStack(spacing: 7) {
+                ForEach(store.presets) { preset in
+                    BrushRow(preset: preset)
+                }
             }
         }
         .padding(12)
+    }
+
+    private var recentBrushes: [BrushPreset] {
+        var seen = Set<String>()
+        return store.recentPresetIDs.compactMap { id in
+            guard seen.insert(id).inserted else { return nil }
+            return store.presets.first { $0.id == id }
+        }
     }
 
     private var settings: some View {
@@ -106,10 +162,26 @@ struct BrushPanel: View {
                       range: 0...1,
                       display: "\(Int(store.brushGrain * 100))%")
 
+            SliderRow(title: "Taper",
+                      value: $store.brushTaper,
+                      range: 0...0.8,
+                      display: "\(Int(store.brushTaper * 100))%")
+
+            SliderRow(title: "Pressure curve",
+                      value: $store.pressureCurve,
+                      range: 0.2...2,
+                      display: String(format: "%.1f×", store.pressureCurve))
+
             SliderRow(title: "Stabilization",
                       value: $store.brushSmoothing,
                       range: 0...0.9,
                       display: "\(Int(store.brushSmoothing * 100))%")
+
+            Text("Taper thins the start of each stroke. Pressure curve shapes how tablet pressure maps to brush size.")
+                .font(.system(size: 9.5))
+                .foregroundStyle(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
         }
         .padding(12)
     }

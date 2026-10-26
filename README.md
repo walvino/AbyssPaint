@@ -11,16 +11,20 @@ with pressure-sensitive brushes, layers and PNG export.
 ## Features
 
 - Procreate-style floating interface: top bar, brush studio, layers panel, colour panel and bottom dock
-- Pressure-sensitive brush engine (stamps with spacing, hardness, flow, grain)
+- Pressure- and tilt-sensitive brush engine (stamps with spacing, hardness, flow, grain, taper and pressure curve)
+- Pen eraser tip detection: flip a Wacom/Huion/XP-Pen stylus to erase without switching tools
 - Brush presets with generated stroke previews: round, soft airbrush, pencil, studio ink, marker, soft eraser
-- Layers with visibility, opacity, 17 blend modes, duplicate, merge down, flip, reorder, import, clear
-- Undo / redo for the full layer stack (24 steps)
+- Recent-brush bar that persists between launches
+- Layers with visibility, opacity, 17 blend modes, rename, drag-reorder, lock, alpha lock, duplicate, merge down, flip, import and clear
+- Undo / redo for the full layer stack (24 steps) with a history slider
+- QuickShape: hold at the end of a brush stroke to snap it into a straight line
 - Zoom, pan, pinch, two-finger rotation plus canvas rotate controls
 - Eyedropper tool (or ⌥-click), stabilisation, recent colour swatches
 - Symmetry drawing guide (vertical, horizontal, quadrant) and colour palettes
-- Save / open `.abysspaint` projects and export PNG
-- Universal binary (Apple Silicon + Intel), macOS 14+
-- Bundle identifier: `com.abysspaint.mac`
+- Paper colour presets (white, warm, cool grey, kraft, charcoal) that are included in exports
+- Debounced autosave with a recovery prompt after an unexpected quit
+- Save / open `.abysspaint` projects (layers, locks, blend modes and paper colour)
+- Export PNG, JPEG, TIFF and PDF
 
 ## Build locally
 

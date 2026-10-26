@@ -20,10 +20,16 @@ final class CanvasNSView: NSView {
     private var spaceDown = false
     private var lastCanvasPoint: CGPoint?
     private var lastPressure: CGFloat = 1
+    private var lastTilt: CGPoint = .zero
     private var smoothedPoint: CGPoint?
     private var lastDragPoint: CGPoint = .zero
     private var hoverPoint: CGPoint?
     private var trackingAreaRef: NSTrackingArea?
+    private var strokeStartPoint: CGPoint = .zero
+    private var strokeLastPoint: CGPoint = .zero
+    private var strokeLastMove = Date()
+    private var lastRawCanvasPoint: CGPoint?
+    private var strokeErases = false
 
     override var acceptsFirstResponder: Bool { true }
     override var isFlipped: Bool { false }
@@ -152,7 +158,7 @@ final class CanvasNSView: NSView {
             color: NSColor.black.withAlphaComponent(0.65).cgColor
         )
         context.addPath(paperPath)
-        context.setFillColor(NSColor.white.cgColor)
+        context.setFillColor(store.paperColor.cgColor)
         context.fillPath()
         context.restoreGState()
 
@@ -176,6 +182,7 @@ final class CanvasNSView: NSView {
             if index == activeIndex,
                store.isStroking,
                store.tool == .brush,
+               !store.currentStrokeErases,
                let stroke = store.strokeBitmap.image {
                 context.setAlpha(store.brushOpacity)
                 context.setBlendMode(.normal)
@@ -239,10 +246,19 @@ final class CanvasNSView: NSView {
     }
 
     private func pressure(for event: NSEvent) -> CGFloat {
-        if event.subtype == .tabletPoint {
+        if event.subtype == .tabletPoint || event.pointingDeviceType != .unknown {
             return min(max(CGFloat(event.pressure), 0.01), 1.0)
         }
         return 1.0
+    }
+
+    private func tilt(for event: NSEvent) -> CGPoint {
+        guard event.subtype == .tabletPoint else { return .zero }
+        return CGPoint(x: CGFloat(event.tilt.x), y: CGFloat(event.tilt.y))
+    }
+
+    private func isEraserDevice(_ event: NSEvent) -> Bool {
+        event.pointingDeviceType == .eraser
     }
 
     // MARK: - Mouse / tablet input
@@ -268,12 +284,24 @@ final class CanvasNSView: NSView {
         guard store.canvasRect.contains(point), store.activeLayerIndex != nil else { return }
 
         let value = pressure(for: event)
-        isPainting = true
+        let eventTilt = tilt(for: event)
+        strokeErases = store.tool == .eraser || isEraserDevice(event)
+        strokeStartPoint = point
+        strokeLastPoint = point
+        strokeLastMove = Date()
+        lastRawCanvasPoint = point
+
+        isPainting = store.beginStroke(at: point,
+                                       pressure: value,
+                                       tilt: eventTilt,
+                                       erase: strokeErases)
+        guard isPainting else { return }
+
         lastCanvasPoint = point
         lastPressure = value
+        lastTilt = eventTilt
         smoothedPoint = point
 
-        store.beginStroke(at: point, pressure: value)
         needsDisplay = true
     }
 
@@ -285,6 +313,7 @@ final class CanvasNSView: NSView {
 
         guard isPainting, let store, var point = canvasPoint(event) else { return }
 
+        let rawPoint = point
         let smoothing = store.brushSmoothing
         if smoothing > 0.001 {
             if smoothedPoint == nil { smoothedPoint = point }
@@ -298,17 +327,36 @@ final class CanvasNSView: NSView {
         }
 
         let value = pressure(for: event)
+        let eventTilt = tilt(for: event)
         if let last = lastCanvasPoint {
             store.continueStroke(
                 from: last,
                 to: point,
                 fromPressure: lastPressure,
-                toPressure: value
+                toPressure: value,
+                fromTilt: lastTilt,
+                toTilt: eventTilt
             )
         }
 
         lastCanvasPoint = point
         lastPressure = value
+        lastTilt = eventTilt
+
+        if let lastRaw = lastRawCanvasPoint {
+            let mx = rawPoint.x - lastRaw.x
+            let my = rawPoint.y - lastRaw.y
+            if (mx * mx + my * my).squareRoot() > 0.5 {
+                strokeLastPoint = point
+                strokeLastMove = Date()
+                lastRawCanvasPoint = rawPoint
+            }
+        } else {
+            strokeLastPoint = point
+            strokeLastMove = Date()
+            lastRawCanvasPoint = rawPoint
+        }
+
         needsDisplay = true
     }
 
@@ -320,9 +368,19 @@ final class CanvasNSView: NSView {
 
         guard isPainting, let store else { return }
 
+        // Hold still at the end of a brush stroke to snap it to a straight line.
+        let held = Date().timeIntervalSince(strokeLastMove) > 0.25
+        let dx = strokeLastPoint.x - strokeStartPoint.x
+        let dy = strokeLastPoint.y - strokeStartPoint.y
+        let length = (dx * dx + dy * dy).squareRoot()
+        if held, !strokeErases, store.tool == .brush, length > 24 {
+            store.quickShape(from: strokeStartPoint, to: strokeLastPoint)
+        }
+
         store.endStroke()
         isPainting = false
         lastCanvasPoint = nil
+        lastRawCanvasPoint = nil
         smoothedPoint = nil
         hoverPoint = viewPoint(event)
         needsDisplay = true

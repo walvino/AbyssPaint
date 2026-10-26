@@ -131,6 +131,8 @@ struct Layer: Identifiable {
     let id: UUID
     var name: String
     var isVisible: Bool
+    var isLocked: Bool
+    var isAlphaLocked: Bool
     var opacity: Double
     var blendMode: LayerBlendMode
     let bitmap: Bitmap
@@ -138,12 +140,16 @@ struct Layer: Identifiable {
     init(id: UUID = UUID(),
          name: String,
          isVisible: Bool = true,
+         isLocked: Bool = false,
+         isAlphaLocked: Bool = false,
          opacity: Double = 1,
          blendMode: LayerBlendMode = .normal,
          bitmap: Bitmap) {
         self.id = id
         self.name = name
         self.isVisible = isVisible
+        self.isLocked = isLocked
+        self.isAlphaLocked = isAlphaLocked
         self.opacity = opacity
         self.blendMode = blendMode
         self.bitmap = bitmap
@@ -201,6 +207,9 @@ final class DocumentStore: ObservableObject {
     @Published var brushSpacing: CGFloat = 0.10
     @Published var brushSmoothing: CGFloat = 0.18
     @Published var brushGrain: CGFloat = 0.10
+    @Published var brushTaper: CGFloat = 0.12
+    @Published var pressureCurve: CGFloat = 1.0
+    @Published var paperColor: NSColor = .white
     @Published var color: NSColor = NSColor(srgbRed: 0.851, green: 0.227, blue: 0.157, alpha: 1)
     @Published var recentColors: [NSColor] = [
         NSColor(srgbRed: 0.851, green: 0.227, blue: 0.157, alpha: 1),
@@ -211,34 +220,57 @@ final class DocumentStore: ObservableObject {
         NSColor(srgbRed: 0.09, green: 0.09, blue: 0.10, alpha: 1)
     ]
     @Published var selectedPresetID: String = "round"
+    @Published var recentPresetIDs: [String] = UserDefaults.standard.stringArray(forKey: "AbyssRecentBrushes") ?? ["round", "soft", "pencil"]
     @Published var symmetry: SymmetryMode = .off
 
     // UI sync
-    @Published var revision: Int = 0
+    @Published var revision: Int = 0 {
+        didSet {
+            if suppressAutosave {
+                suppressAutosave = false
+                return
+            }
+            hasUnsavedEdits = true
+            scheduleAutosave()
+        }
+    }
     @Published var fitRequest: Int = 0
     @Published private(set) var rotationCommandID: Int = 0
     private(set) var rotationCommand: CanvasRotationCommand = .reset
     @Published private(set) var isStroking: Bool = false
     @Published private(set) var canUndo: Bool = false
     @Published private(set) var canRedo: Bool = false
+    @Published private(set) var historyPosition: Int = 0
+    @Published private(set) var historyLength: Int = 0
     @Published var toast: String?
     @Published var showsNewCanvasSheet: Bool = ProcessInfo.processInfo.environment["ABYSS_SHOW_NEW"] != nil
+    @Published private(set) var recoveredAutosave: Bool = false
 
     let presets = BrushPreset.builtIn
 
     private(set) var strokeBitmap: Bitmap
     private var drawingContext: CGContext?
     private var lastDabPoint: CGPoint?
+    private var strokeStartPoint: CGPoint = .zero
+    private var strokeDistance: CGFloat = 0
+    private var strokeErases = false
     private var undoStack: [Snapshot] = []
     private var redoStack: [Snapshot] = []
     private var thumbnailCache: [UUID: (revision: Int, image: NSImage)] = [:]
     private var toastToken = 0
+    private var autosaveWorkItem: DispatchWorkItem?
+    private var suppressAutosave = false
+    private(set) var hasUnsavedEdits = false
+    let autosaveEnabled = ProcessInfo.processInfo.environment["ABYSS_SELFTEST"] == nil
+        && ProcessInfo.processInfo.environment["ABYSS_SNAPSHOT"] == nil
 
     private struct Snapshot {
         struct Item {
             let id: UUID
             let name: String
             let isVisible: Bool
+            let isLocked: Bool
+            let isAlphaLocked: Bool
             let opacity: Double
             let blendMode: LayerBlendMode
             let image: CGImage?
@@ -306,6 +338,8 @@ final class DocumentStore: ObservableObject {
         return layers[index]
     }
 
+    var currentStrokeErases: Bool { strokeErases }
+
     func thumbnail(for layer: Layer) -> NSImage? {
         if let cached = thumbnailCache[layer.id], cached.revision == revision {
             return cached.image
@@ -329,6 +363,13 @@ final class DocumentStore: ObservableObject {
         brushSmoothing = preset.smoothing
         brushGrain = preset.grain
         tool = preset.id == "eraser" ? .eraser : .brush
+
+        recentPresetIDs.removeAll { $0 == preset.id }
+        recentPresetIDs.insert(preset.id, at: 0)
+        if recentPresetIDs.count > 4 {
+            recentPresetIDs.removeLast(recentPresetIDs.count - 4)
+        }
+        UserDefaults.standard.set(recentPresetIDs, forKey: "AbyssRecentBrushes")
     }
 
     func setColor(_ newColor: NSColor, remember: Bool = true) {
@@ -379,34 +420,51 @@ final class DocumentStore: ObservableObject {
 
     // MARK: Strokes
 
-    func beginStroke(at point: CGPoint, pressure: CGFloat) {
-        guard let index = activeLayerIndex else { return }
+    @discardableResult
+    func beginStroke(at point: CGPoint, pressure: CGFloat, tilt: CGPoint = .zero, erase: Bool = false) -> Bool {
+        guard let index = activeLayerIndex else { return false }
+        guard !layers[index].isLocked else {
+            showToast("Layer is locked")
+            return false
+        }
+        guard layers[index].isVisible else {
+            showToast("Layer is hidden")
+            return false
+        }
+
+        strokeErases = erase || tool == .eraser
+
+        if strokeErases, layers[index].isAlphaLocked {
+            showToast("Alpha lock is on")
+            return false
+        }
 
         pushUndo()
         lastDabPoint = nil
+        strokeStartPoint = point
+        strokeDistance = 0
         isStroking = true
 
-        switch tool {
-        case .brush:
-            strokeBitmap.clear()
-            drawingContext = strokeBitmap.context
-        case .eraser:
+        if strokeErases {
             layers[index].bitmap.context.setBlendMode(.destinationOut)
             drawingContext = layers[index].bitmap.context
-        case .eyedropper:
-            break
+        } else {
+            strokeBitmap.clear()
+            drawingContext = strokeBitmap.context
         }
 
-        stamp(at: point, pressure: pressure)
+        stamp(at: point, pressure: pressure, tilt: tilt)
+        return true
     }
 
     func continueStroke(from: CGPoint, to: CGPoint,
-                        fromPressure: CGFloat, toPressure: CGFloat) {
+                        fromPressure: CGFloat, toPressure: CGFloat,
+                        fromTilt: CGPoint = .zero, toTilt: CGPoint = .zero) {
         guard isStroking, drawingContext != nil else { return }
 
         let spacingPixels = max(0.75, brushSize * max(0.02, brushSpacing))
         guard let start = lastDabPoint else {
-            stamp(at: to, pressure: toPressure)
+            stamp(at: to, pressure: toPressure, tilt: toTilt)
             return
         }
 
@@ -420,7 +478,10 @@ final class DocumentStore: ObservableObject {
             let t = CGFloat(step) / CGFloat(steps)
             let point = CGPoint(x: start.x + dx * t, y: start.y + dy * t)
             let pressure = fromPressure + (toPressure - fromPressure) * t
-            stamp(at: point, pressure: pressure)
+            let tilt = CGPoint(x: fromTilt.x + (toTilt.x - fromTilt.x) * t,
+                               y: fromTilt.y + (toTilt.y - fromTilt.y) * t)
+            strokeDistance += distance / CGFloat(steps)
+            stamp(at: point, pressure: pressure, tilt: tilt)
         }
     }
 
@@ -433,7 +494,7 @@ final class DocumentStore: ObservableObject {
 
         defer { revision += 1 }
 
-        if tool == .eraser {
+        if strokeErases {
             activeLayer?.bitmap.context.setBlendMode(.normal)
             return
         }
@@ -444,12 +505,36 @@ final class DocumentStore: ObservableObject {
         let context = layers[index].bitmap.context
 
         context.saveGState()
-        context.setBlendMode(.normal)
+        context.setBlendMode(layers[index].isAlphaLocked ? .sourceAtop : .normal)
         context.setAlpha(brushOpacity)
         context.draw(image, in: canvasRect)
         context.restoreGState()
 
         strokeBitmap.clear()
+    }
+
+    /// Replaces the freehand stroke with a straight line (QuickShape).
+    func quickShape(from start: CGPoint, to end: CGPoint) {
+        guard isStroking, !strokeErases, drawingContext != nil else { return }
+
+        strokeBitmap.clear()
+        lastDabPoint = nil
+        strokeDistance = 0
+
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let distance = (dx * dx + dy * dy).squareRoot()
+        let spacingPixels = max(0.75, brushSize * max(0.02, brushSpacing))
+        let steps = max(1, Int((distance / spacingPixels).rounded(.up)))
+
+        for step in 0...steps {
+            let t = CGFloat(step) / CGFloat(steps)
+            let point = CGPoint(x: start.x + dx * t, y: start.y + dy * t)
+            strokeDistance += distance / CGFloat(steps)
+            stamp(at: point, pressure: 0.85, tilt: .zero)
+        }
+
+        showToast("QuickShape: line")
     }
 
     private func applyGrain() {
@@ -468,19 +553,29 @@ final class DocumentStore: ObservableObject {
         context.restoreGState()
     }
 
-    private func stamp(at point: CGPoint, pressure: CGFloat) {
+    private func stamp(at point: CGPoint, pressure: CGFloat, tilt: CGPoint) {
         guard let context = drawingContext else { return }
 
         let clamped = min(max(pressure, 0.01), 1.0)
-        let curved = pow(clamped, 0.75)
-        let diameter = max(1.0, brushSize * (0.25 + 0.75 * curved))
+        let curved = pow(clamped, 0.75 * max(0.2, pressureCurve))
 
-        let dabColor = tool == .brush ? color : NSColor.white
+        var taperFactor: CGFloat = 1
+        if brushTaper > 0.001 {
+            let taperLength = max(6, brushSize * 6) * brushTaper
+            taperFactor = min(1, 0.18 + 0.82 * (strokeDistance / max(1, taperLength)))
+        }
+
+        let diameter = max(1.0, brushSize * (0.25 + 0.75 * curved) * taperFactor)
+        let tiltMagnitude = min(1, (tilt.x * tilt.x + tilt.y * tilt.y).squareRoot())
+        let tiltAngle = atan2(tilt.y, tilt.x)
+
+        let dabColor = strokeErases ? NSColor.white : color
         guard let dab = BrushRenderer.dab(color: dabColor, hardness: brushHardness) else { return }
 
-        context.setAlpha(tool == .brush ? brushFlow : 1)
+        context.setAlpha(strokeErases ? 1 : brushFlow)
 
-        draw(dab: dab, at: point, diameter: diameter, in: context)
+        draw(dab: dab, at: point, diameter: diameter,
+             angle: tiltAngle, magnitude: tiltMagnitude, in: context)
 
         if symmetry != .off {
             let width = canvasSize.width
@@ -493,27 +588,46 @@ final class DocumentStore: ObservableObject {
             case .off:
                 break
             case .vertical:
-                draw(dab: dab, at: mirroredX, diameter: diameter, in: context)
+                draw(dab: dab, at: mirroredX, diameter: diameter,
+                     angle: .pi - tiltAngle, magnitude: tiltMagnitude, in: context)
             case .horizontal:
-                draw(dab: dab, at: mirroredY, diameter: diameter, in: context)
+                draw(dab: dab, at: mirroredY, diameter: diameter,
+                     angle: -tiltAngle, magnitude: tiltMagnitude, in: context)
             case .quadrant:
-                draw(dab: dab, at: mirroredX, diameter: diameter, in: context)
-                draw(dab: dab, at: mirroredY, diameter: diameter, in: context)
-                draw(dab: dab, at: mirroredXY, diameter: diameter, in: context)
+                draw(dab: dab, at: mirroredX, diameter: diameter,
+                     angle: .pi - tiltAngle, magnitude: tiltMagnitude, in: context)
+                draw(dab: dab, at: mirroredY, diameter: diameter,
+                     angle: -tiltAngle, magnitude: tiltMagnitude, in: context)
+                draw(dab: dab, at: mirroredXY, diameter: diameter,
+                     angle: .pi + tiltAngle, magnitude: tiltMagnitude, in: context)
             }
         }
 
         lastDabPoint = point
     }
 
-    private func draw(dab: CGImage, at point: CGPoint, diameter: CGFloat, in context: CGContext) {
-        let rect = CGRect(
-            x: point.x - diameter / 2,
-            y: point.y - diameter / 2,
-            width: diameter,
-            height: diameter
-        )
-        context.draw(dab, in: rect)
+    private func draw(dab: CGImage, at point: CGPoint, diameter: CGFloat,
+                      angle: CGFloat, magnitude: CGFloat, in context: CGContext) {
+        if magnitude < 0.03 {
+            let rect = CGRect(
+                x: point.x - diameter / 2,
+                y: point.y - diameter / 2,
+                width: diameter,
+                height: diameter
+            )
+            context.draw(dab, in: rect)
+            return
+        }
+
+        let longSide = diameter * (1 + 0.8 * magnitude)
+        let shortSide = max(1, diameter * (1 - 0.35 * magnitude))
+
+        context.saveGState()
+        context.translateBy(x: point.x, y: point.y)
+        context.rotate(by: angle)
+        context.draw(dab, in: CGRect(x: -longSide / 2, y: -shortSide / 2,
+                                     width: longSide, height: shortSide))
+        context.restoreGState()
     }
 
     // MARK: Undo
@@ -524,6 +638,8 @@ final class DocumentStore: ObservableObject {
                 Snapshot.Item(id: $0.id,
                               name: $0.name,
                               isVisible: $0.isVisible,
+                              isLocked: $0.isLocked,
+                              isAlphaLocked: $0.isAlphaLocked,
                               opacity: $0.opacity,
                               blendMode: $0.blendMode,
                               image: $0.bitmap.image)
@@ -569,6 +685,8 @@ final class DocumentStore: ObservableObject {
             restored.append(Layer(id: item.id,
                                   name: item.name,
                                   isVisible: item.isVisible,
+                                  isLocked: item.isLocked,
+                                  isAlphaLocked: item.isAlphaLocked,
                                   opacity: item.opacity,
                                   blendMode: item.blendMode,
                                   bitmap: bitmap))
@@ -582,6 +700,24 @@ final class DocumentStore: ObservableObject {
     private func updateUndoFlags() {
         canUndo = !undoStack.isEmpty
         canRedo = !redoStack.isEmpty
+        historyPosition = undoStack.count
+        historyLength = undoStack.count + redoStack.count
+    }
+
+    /// Jumps to an absolute position in the undo history (0 = oldest kept state).
+    func jumpHistory(to position: Int) {
+        let target = min(max(0, position), undoStack.count + redoStack.count)
+        if target < undoStack.count {
+            for _ in 0..<(undoStack.count - target) {
+                guard canUndo else { break }
+                undo()
+            }
+        } else if target > undoStack.count {
+            for _ in 0..<(target - undoStack.count) {
+                guard canRedo else { break }
+                redo()
+            }
+        }
     }
 
     // MARK: Layers
@@ -608,6 +744,8 @@ final class DocumentStore: ObservableObject {
         let source = layers[index]
         let copy = Layer(name: source.name + " copy",
                          isVisible: source.isVisible,
+                         isLocked: source.isLocked,
+                         isAlphaLocked: source.isAlphaLocked,
                          opacity: source.opacity,
                          blendMode: source.blendMode,
                          bitmap: bitmap)
@@ -619,6 +757,10 @@ final class DocumentStore: ObservableObject {
 
     func deleteActiveLayer() {
         guard layers.count > 1, let index = activeLayerIndex else { return }
+        guard !layers[index].isLocked else {
+            showToast("Layer is locked")
+            return
+        }
         pushUndo()
         layers.remove(at: index)
         let next = max(0, min(index, layers.count - 1))
@@ -628,6 +770,10 @@ final class DocumentStore: ObservableObject {
 
     func mergeDown() {
         guard let index = activeLayerIndex, index > 0, let bitmap = makeBitmap() else { return }
+        guard !layers[index].isLocked, !layers[index - 1].isLocked else {
+            showToast("Layer is locked")
+            return
+        }
         pushUndo()
 
         let lower = layers[index - 1]
@@ -649,6 +795,8 @@ final class DocumentStore: ObservableObject {
         layers[index - 1] = Layer(id: lower.id,
                                   name: lower.name,
                                   isVisible: true,
+                                  isLocked: lower.isLocked,
+                                  isAlphaLocked: lower.isAlphaLocked,
                                   opacity: 1,
                                   blendMode: .normal,
                                   bitmap: bitmap)
@@ -659,6 +807,10 @@ final class DocumentStore: ObservableObject {
 
     func flipActiveLayerHorizontally() {
         guard let index = activeLayerIndex, let bitmap = makeBitmap() else { return }
+        guard !layers[index].isLocked else {
+            showToast("Layer is locked")
+            return
+        }
         pushUndo()
 
         bitmap.context.translateBy(x: canvasSize.width, y: 0)
@@ -671,6 +823,8 @@ final class DocumentStore: ObservableObject {
         layers[index] = Layer(id: source.id,
                               name: source.name,
                               isVisible: source.isVisible,
+                              isLocked: source.isLocked,
+                              isAlphaLocked: source.isAlphaLocked,
                               opacity: source.opacity,
                               blendMode: source.blendMode,
                               bitmap: bitmap)
@@ -679,8 +833,45 @@ final class DocumentStore: ObservableObject {
 
     func clearActiveLayer() {
         guard let index = activeLayerIndex else { return }
+        guard !layers[index].isLocked, !layers[index].isAlphaLocked else {
+            showToast("Layer is locked")
+            return
+        }
         pushUndo()
         layers[index].bitmap.clear()
+        revision += 1
+    }
+
+    func renameLayer(id: UUID, to newName: String) {
+        guard let index = layers.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != layers[index].name else { return }
+        pushUndo()
+        layers[index].name = trimmed
+        revision += 1
+    }
+
+    func setLayerLocked(_ locked: Bool, id: UUID) {
+        guard let index = layers.firstIndex(where: { $0.id == id }) else { return }
+        layers[index].isLocked = locked
+        revision += 1
+    }
+
+    func setLayerAlphaLocked(_ locked: Bool, id: UUID) {
+        guard let index = layers.firstIndex(where: { $0.id == id }) else { return }
+        layers[index].isAlphaLocked = locked
+        revision += 1
+    }
+
+    func moveLayer(id: UUID, toIndex target: Int) {
+        guard let from = layers.firstIndex(where: { $0.id == id }),
+              layers.indices.contains(target),
+              from != target else { return }
+        pushUndo()
+        let layer = layers.remove(at: from)
+        let insert = min(max(0, target), layers.count)
+        layers.insert(layer, at: insert)
+        activeLayerID = layer.id
         revision += 1
     }
 
@@ -763,15 +954,20 @@ final class DocumentStore: ObservableObject {
         lastDabPoint = nil
         documentURL = nil
         documentName = "Untitled"
+        paperColor = .white
+        recoveredAutosave = false
+        clearAutosave()
         updateUndoFlags()
+        suppressAutosave = true
         revision += 1
+        hasUnsavedEdits = false
     }
 
-    func flattenedImage(background: NSColor? = .white) -> CGImage? {
+    func flattenedImage(background: NSColor? = nil) -> CGImage? {
         guard let flat = makeBitmap() else { return nil }
         let context = flat.context
 
-        if let background {
+        if let background = background ?? paperColor as NSColor? {
             context.setFillColor(background.cgColor)
             context.fill(flat.bounds)
         }
@@ -788,20 +984,96 @@ final class DocumentStore: ObservableObject {
         return flat.image
     }
 
+    enum ExportFormat: String, CaseIterable, Identifiable {
+        case png
+        case jpeg
+        case tiff
+        case pdf
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .png: return "PNG"
+            case .jpeg: return "JPEG"
+            case .tiff: return "TIFF"
+            case .pdf: return "PDF"
+            }
+        }
+
+        var fileExtension: String {
+            switch self {
+            case .png: return "png"
+            case .jpeg: return "jpg"
+            case .tiff: return "tiff"
+            case .pdf: return "pdf"
+            }
+        }
+
+        var contentType: UTType {
+            switch self {
+            case .png: return .png
+            case .jpeg: return .jpeg
+            case .tiff: return .tiff
+            case .pdf: return .pdf
+            }
+        }
+    }
+
+    /// Backwards-compatible entry point used by the toolbar.
     func exportPNG() {
+        export(as: .png)
+    }
+
+    func export(as format: ExportFormat) {
         guard let image = flattenedImage() else { return }
 
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.png]
-        panel.nameFieldStringValue = documentName + ".png"
+        panel.allowedContentTypes = [format.contentType]
+        panel.nameFieldStringValue = documentName + "." + format.fileExtension
         panel.canCreateDirectories = true
-        panel.title = "Export artwork as PNG"
+        panel.title = "Export artwork as \(format.title)"
 
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        if let data = pngData(image) {
-            try? data.write(to: url)
+        do {
+            try exportData(image, as: format).write(to: url)
             showToast("Exported \(url.lastPathComponent)")
+        } catch {
+            showToast("Export failed: \(error.localizedDescription)")
+        }
+    }
+
+    func exportData(_ image: CGImage, as format: ExportFormat) throws -> Data {
+        switch format {
+        case .png:
+            guard let data = pngData(image) else { throw ProjectError.invalid }
+            return data
+        case .jpeg:
+            let rep = NSBitmapImageRep(cgImage: image)
+            guard let data = rep.representation(using: .jpeg,
+                                                properties: [.compressionFactor: 0.92]) else {
+                throw ProjectError.invalid
+            }
+            return data
+        case .tiff:
+            let rep = NSBitmapImageRep(cgImage: image)
+            guard let data = rep.representation(using: .tiff, properties: [:]) else {
+                throw ProjectError.invalid
+            }
+            return data
+        case .pdf:
+            let data = NSMutableData()
+            guard let consumer = CGDataConsumer(data: data) else { throw ProjectError.invalid }
+            var mediaBox = CGRect(origin: .zero, size: canvasSize)
+            guard let context = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else {
+                throw ProjectError.invalid
+            }
+            context.beginPDFPage(nil)
+            context.draw(image, in: mediaBox)
+            context.endPDFPage()
+            context.closePDF()
+            return data as Data
         }
     }
 
@@ -850,6 +1122,17 @@ final class DocumentStore: ObservableObject {
     }
 
     func saveProject(to url: URL) throws {
+        try writeProject(to: url)
+
+        documentURL = url
+        documentName = url.deletingPathExtension().lastPathComponent
+        recoveredAutosave = false
+        hasUnsavedEdits = false
+        clearAutosave()
+        showToast("Saved \(documentName)")
+    }
+
+    private func writeProject(to url: URL) throws {
         let fm = FileManager.default
         let temp = url.deletingLastPathComponent()
             .appendingPathComponent(".abysspaint-\(UUID().uuidString)")
@@ -866,16 +1149,19 @@ final class DocumentStore: ObservableObject {
             layerFiles.append(
                 ProjectFile.Layer(name: layer.name,
                                   isVisible: layer.isVisible,
+                                  isLocked: layer.isLocked,
+                                  isAlphaLocked: layer.isAlphaLocked,
                                   opacity: layer.opacity,
                                   blendMode: layer.blendMode.rawValue,
                                   file: fileName)
             )
         }
 
-        let project = ProjectFile(version: 1,
+        let project = ProjectFile(version: 2,
                                   width: Int(canvasSize.width),
                                   height: Int(canvasSize.height),
                                   activeIndex: activeLayerIndex ?? 0,
+                                  paperColor: paperColor.abyssHex,
                                   layers: layerFiles)
 
         let data = try JSONEncoder().encode(project)
@@ -885,13 +1171,9 @@ final class DocumentStore: ObservableObject {
             try fm.removeItem(at: url)
         }
         try fm.moveItem(at: temp, to: url)
-
-        documentURL = url
-        documentName = url.deletingPathExtension().lastPathComponent
-        showToast("Saved \(documentName)")
     }
 
-    func openProject(from url: URL) throws {
+    func openProject(from url: URL, restoring: Bool = false) throws {
         let data = try Data(contentsOf: url.appendingPathComponent("document.json"))
         let project = try JSONDecoder().decode(ProjectFile.self, from: data)
 
@@ -915,6 +1197,8 @@ final class DocumentStore: ObservableObject {
             newLayers.append(
                 Layer(name: item.name,
                       isVisible: item.isVisible,
+                      isLocked: item.isLocked ?? false,
+                      isAlphaLocked: item.isAlphaLocked ?? false,
                       opacity: item.opacity,
                       blendMode: LayerBlendMode(rawValue: item.blendMode) ?? .normal,
                       bitmap: bitmap)
@@ -927,15 +1211,91 @@ final class DocumentStore: ObservableObject {
         strokeBitmap = stroke
         layers = newLayers
         activeLayerID = newLayers[min(max(0, project.activeIndex), newLayers.count - 1)].id
+        paperColor = project.paperColor.flatMap(NSColor.init(abyssHex:)) ?? .white
 
         undoStack.removeAll()
         redoStack.removeAll()
         updateUndoFlags()
 
-        documentURL = url
-        documentName = url.deletingPathExtension().lastPathComponent
+        if restoring {
+            documentURL = nil
+            documentName = "Recovered artwork"
+            recoveredAutosave = true
+            showToast("Recovered unsaved artwork")
+        } else {
+            documentURL = url
+            documentName = url.deletingPathExtension().lastPathComponent
+            recoveredAutosave = false
+            clearAutosave()
+            showToast("Opened \(documentName)")
+        }
+
+        suppressAutosave = true
         revision += 1
-        showToast("Opened \(documentName)")
+        hasUnsavedEdits = restoring
+    }
+
+    // MARK: Autosave & recovery
+
+    static var autosaveURL: URL {
+        if let override = ProcessInfo.processInfo.environment["ABYSS_AUTOSAVE_PATH"] {
+            return URL(fileURLWithPath: override)
+        }
+        let base = FileManager.default.urls(for: .applicationSupportDirectory,
+                                            in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Application Support", isDirectory: true)
+        return base
+            .appendingPathComponent("AbyssPaint", isDirectory: true)
+            .appendingPathComponent("Autosave.abysspaint", isDirectory: true)
+    }
+
+    var hasAutosave: Bool {
+        FileManager.default.fileExists(atPath: Self.autosaveURL.path)
+    }
+
+    private func scheduleAutosave() {
+        guard autosaveEnabled else { return }
+        autosaveWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.writeAutosave() }
+        autosaveWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: work)
+    }
+
+    func writeAutosave() {
+        guard autosaveEnabled, hasUnsavedEdits else { return }
+        let url = Self.autosaveURL
+        do {
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+            try writeProject(to: url)
+        } catch {
+            // Autosave is best-effort; never interrupt the user's painting.
+        }
+    }
+
+    func autosaveNow() {
+        autosaveWorkItem?.cancel()
+        autosaveWorkItem = nil
+        writeAutosave()
+    }
+
+    @discardableResult
+    func restoreAutosave() -> Bool {
+        guard hasAutosave else { return false }
+        do {
+            try openProject(from: Self.autosaveURL, restoring: true)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    func clearAutosave() {
+        autosaveWorkItem?.cancel()
+        autosaveWorkItem = nil
+        guard autosaveEnabled else { return }
+        try? FileManager.default.removeItem(at: Self.autosaveURL)
     }
 
     private func pngData(_ image: CGImage) -> Data? {
@@ -953,6 +1313,8 @@ struct ProjectFile: Codable {
     struct Layer: Codable {
         var name: String
         var isVisible: Bool
+        var isLocked: Bool?
+        var isAlphaLocked: Bool?
         var opacity: Double
         var blendMode: String
         var file: String
@@ -962,5 +1324,26 @@ struct ProjectFile: Codable {
     var width: Int
     var height: Int
     var activeIndex: Int
+    var paperColor: String?
     var layers: [Layer]
+}
+
+extension NSColor {
+    convenience init?(abyssHex hex: String) {
+        let cleaned = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "#", with: "")
+        guard cleaned.count == 6, let value = UInt32(cleaned, radix: 16) else { return nil }
+        self.init(srgbRed: CGFloat((value >> 16) & 0xFF) / 255,
+                  green: CGFloat((value >> 8) & 0xFF) / 255,
+                  blue: CGFloat(value & 0xFF) / 255,
+                  alpha: 1)
+    }
+
+    var abyssHex: String {
+        let converted = usingColorSpace(.sRGB) ?? self
+        return String(format: "%02X%02X%02X",
+                      Int(round(converted.redComponent * 255)),
+                      Int(round(converted.greenComponent * 255)),
+                      Int(round(converted.blueComponent * 255)))
+    }
 }

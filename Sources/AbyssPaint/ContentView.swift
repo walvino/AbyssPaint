@@ -105,6 +105,8 @@ struct TopBar: View {
     @Binding var showLayers: Bool
     @Binding var showColor: Bool
 
+    @State private var showHistory = ProcessInfo.processInfo.environment["ABYSS_SHOW_HISTORY"] != nil
+
     var body: some View {
         HStack(spacing: 10) {
             HStack(spacing: 6) {
@@ -143,6 +145,15 @@ struct TopBar: View {
                     store.redo()
                 }
                 .disabled(!store.canRedo)
+
+                IconButton(symbol: "clock.arrow.circlepath", help: "History") {
+                    showHistory.toggle()
+                }
+                .disabled(store.historyLength == 0)
+                .popover(isPresented: $showHistory, arrowEdge: .bottom) {
+                    HistoryPopover()
+                        .environmentObject(store)
+                }
             }
 
             Spacer(minLength: 4)
@@ -174,11 +185,11 @@ struct TopBar: View {
 
             colorButton
 
+            paperMenu
+
             symmetryMenu
 
-            IconButton(symbol: "square.and.arrow.up", help: "Export PNG (⌘E)") {
-                store.exportPNG()
-            }
+            exportMenu
 
             IconButton(symbol: "plus", help: "New canvas") {
                 store.showsNewCanvasSheet = true
@@ -247,6 +258,95 @@ struct TopBar: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Symmetry drawing guide")
+    }
+
+    private var paperMenu: some View {
+        Menu {
+            ForEach(paperPresets) { preset in
+                Button {
+                    store.paperColor = preset.color
+                } label: {
+                    if store.paperColor.abyssHex == preset.color.abyssHex {
+                        Label(preset.id, systemImage: "checkmark")
+                    } else {
+                        Text(preset.id)
+                    }
+                }
+            }
+
+            Divider()
+
+            Button {
+                store.paperColor = store.color
+            } label: {
+                Label("Use current color", systemImage: "eyedropper")
+            }
+
+            Button {
+                store.paperColor = .white
+            } label: {
+                Label("Reset to white", systemImage: "arrow.counterclockwise")
+            }
+        } label: {
+            Image(systemName: "rectangle.portrait.fill")
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(Color(nsColor: store.paperColor))
+                .frame(width: 30, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Paper color")
+    }
+
+    private var paperPresets: [PaperPreset] {
+        [
+            PaperPreset(id: "White", color: .white),
+            PaperPreset(id: "Warm paper", color: NSColor(srgbRed: 0.965, green: 0.937, blue: 0.863, alpha: 1)),
+            PaperPreset(id: "Cool grey", color: NSColor(srgbRed: 0.867, green: 0.890, blue: 0.910, alpha: 1)),
+            PaperPreset(id: "Kraft", color: NSColor(srgbRed: 0.847, green: 0.765, blue: 0.647, alpha: 1)),
+            PaperPreset(id: "Charcoal", color: NSColor(srgbRed: 0.106, green: 0.110, blue: 0.118, alpha: 1))
+        ]
+    }
+
+    private var exportMenu: some View {
+        Menu {
+            ForEach(DocumentStore.ExportFormat.allCases) { format in
+                Button("Export as \(format.title)…") {
+                    store.export(as: format)
+                }
+            }
+
+            Divider()
+
+            Button("Save Project…") { store.saveDocumentAs() }
+            Button("Open Project…") { store.openDocument() }
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Theme.text)
+                .frame(width: 30, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Export artwork (⌘E for PNG)")
     }
 
     private var colorButton: some View {
@@ -339,4 +439,55 @@ struct BottomDock: View {
             .fill(Theme.hairline)
             .frame(width: 1, height: 18)
     }
+}
+
+// MARK: - History
+
+struct HistoryPopover: View {
+    @EnvironmentObject private var store: DocumentStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionTitle(text: "History")
+                Spacer()
+                Text("Step \(store.historyPosition) of \(store.historyLength)")
+                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Theme.dim)
+            }
+
+            Slider(
+                value: Binding(
+                    get: { Double(store.historyPosition) },
+                    set: { store.jumpHistory(to: Int($0.rounded())) }
+                ),
+                in: 0...Double(max(1, store.historyLength))
+            )
+            .tint(Theme.accent)
+            .disabled(store.historyLength == 0)
+
+            HStack(spacing: 6) {
+                IconButton(symbol: "arrow.uturn.backward", help: "Undo") { store.undo() }
+                    .disabled(!store.canUndo)
+
+                IconButton(symbol: "arrow.uturn.forward", help: "Redo") { store.redo() }
+                    .disabled(!store.canRedo)
+
+                Spacer()
+
+                Text("⌘Z / ⇧⌘Z")
+                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Theme.dim)
+            }
+        }
+        .padding(12)
+        .frame(width: 260)
+        .background(Theme.panel)
+        .preferredColorScheme(.dark)
+    }
+}
+
+private struct PaperPreset: Identifiable {
+    let id: String
+    let color: NSColor
 }
