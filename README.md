@@ -17,6 +17,7 @@ with pressure-sensitive brushes, layers and PNG export.
 - Undo / redo for the full layer stack (24 steps)
 - Zoom, pan, pinch, two-finger rotation plus canvas rotate controls
 - Eyedropper tool (or ⌥-click), stabilisation, recent colour swatches
+- Symmetry drawing guide (vertical, horizontal, quadrant) and colour palettes
 - Save / open `.abysspaint` projects and export PNG
 - Universal binary (Apple Silicon + Intel), macOS 14+
 - Bundle identifier: `com.abysspaint.mac`
@@ -38,17 +39,21 @@ printf 'APPL????' > dist/AbyssPaint.app/Contents/PkgInfo
 codesign --force --deep --sign - dist/AbyssPaint.app
 ```
 
-## CI
-
-`.github/workflows/build-macos.yml` builds a universal `.app` on GitHub Actions
-and uploads `AbyssPaint-macOS.zip` as an artifact.
-
 ## Install (unsigned build)
 
-1. Download `AbyssPaint-macOS.zip` from the latest Actions run.
-2. Unzip it.
+Download the latest release: **https://github.com/walvino/AbyssPaint/releases/latest**
+
+1. Download `AbyssPaint-macOS.zip` and unzip it.
+2. Drag `AbyssPaint.app` into `/Applications`.
 3. Right-click `AbyssPaint.app` → **Open** (first launch only).
-   If macOS still refuses: `xattr -dr com.apple.quarantine /path/to/AbyssPaint.app`
+   If macOS still refuses: `xattr -dr com.apple.quarantine /Applications/AbyssPaint.app`
+
+The build is universal (Apple Silicon + Intel) and ad-hoc signed, not notarised.
+
+## CI
+
+`.github/workflows/build-macos.yml` builds the universal `.app` on GitHub Actions
+and uploads `AbyssPaint-macOS.zip` as an artifact on every push to `main`.
 
 ## Tablet support
 
